@@ -80,11 +80,8 @@ class GaussianProcessRegressionUtils():
         return sigma**2 * (2*np.pi*(l**2))**(3./2.) * np.exp(-.5*(eigenval*l)**2)
         
     def build_Lambda_matrix(self, sigma, l):
-        Lambda = np.identity(self.m)
-        for j in range(self.m):
-            Lambda[j,j] = self.S_SE(sigma, l, self.eigenvalue(j))
-        self.Lambda = Lambda 
-        return Lambda 
+        self.Lambda = np.diag(self.S_SE(sigma, l, self.eigenvalue(j)) for j in range(self.m) 
+        return self.Lambda
         
     def build_approximateCovariance_matrix(self):
         self.approx_K = np.matmul(np.matmul(self.Phi_matrix, self.Lambda), np.transpose(self.Phi_matrix))
