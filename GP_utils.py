@@ -65,7 +65,7 @@ class GaussianProcessRegressionUtils():
         for i in range(3*self.n):
             d = i % 3
             for j in range(self.m):
-                NablaPhi_matrix[i,j] = self.partial_derivative_phi(i,j,d)
+                NablaPhi_matrix[i,j] = self.partial_derivative_phi(int(i/3),j,d)
         self.NablaPhi_matrix = NablaPhi_matrix
         
     def kernel_function(self, x1, x2, sigma, l):
