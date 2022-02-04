@@ -61,6 +61,7 @@ class GaussianProcessRegressionUtils():
         return self.NablaPhi_matrix
     '''
     
+    
     def build_NablaPhi_matrix(self):
         NablaPhi_matrix = np.ones(shape=(3*self.n, self.m))
         for i in range(3*self.n):
