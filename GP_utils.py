@@ -36,7 +36,7 @@ class GaussianProcessRegressionUtils():
         self.Phi_matrix = Phi_matrix
         
     def partial_derivative_phi(self, i, j, dim):
-        #dim_list = [0,1,2]
+        dim_list = [0,1,2]
         if dim not in dim_list:
             print("Error: derivative is only for x, y or z dimension. Return.")
             return
@@ -63,8 +63,8 @@ class GaussianProcessRegressionUtils():
     def build_NablaPhi_matrix(self):
         NablaPhi_matrix = np.ones(shape=(3*self.n, self.m))
         for i in range(3*self.n):
+            d = i % 3
             for j in range(self.m):
-                d = i%3
                 NablaPhi_matrix[i,j] = self.partial_derivative_phi(i,j,d)
         self.NablaPhi_matrix = NablaPhi_matrix
         
