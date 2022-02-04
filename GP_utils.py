@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 
 class GaussianProcessRegressionUtils():
     
-    def __init__(self, n, m, D, Omega):
+    def __init__(self, n, m, D, Omega, sens=1.e-10): # change sens if you have troubles with m
         self.n = n 
         self.m = m 
-        if m >= n or int(m**(1/3)) != (m**(1/3)):
+        if (m >= n) or (abs(m**(1./3.)-round(m**(1./3.))) > 1.e-10):
             print("Error: m must be a perfect cube < n. Return.")
             return
         self.X = np.array([el[0] for el in D])
@@ -14,9 +14,10 @@ class GaussianProcessRegressionUtils():
         self.Omega = Omega
         matrix_n = np.ones((m, 3))
         count = 0
-        for i in range(1, int(m**(1/3))+1):
-            for j in range(1, int(m**(1/3))+1):
-                for k in range(1, int(m**(1/3))+1):
+        m_hat = round(m**(1/3))
+        for i in range(1, m_hat+1):
+            for j in range(1, m_hat+1):
+                for k in range(1, m_hat+1):
                     matrix_n[count] = np.array([i, j, k])
                     count += 1
         self.matrix_n = matrix_n
