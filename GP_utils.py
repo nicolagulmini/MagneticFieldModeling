@@ -36,7 +36,7 @@ class GaussianProcessRegressionUtils():
         self.Phi_matrix = Phi_matrix
         
     def partial_derivative_phi(self, i, j, dim):
-        #dim_list = [0,1,2]
+        dim_list = [0,1,2]
         if dim not in dim_list:
             print("Error: derivative is only for x, y or z dimension. Return.")
             return
@@ -63,9 +63,9 @@ class GaussianProcessRegressionUtils():
     def build_NablaPhi_matrix(self):
         NablaPhi_matrix = np.ones(shape=(3*self.n, self.m))
         for i in range(3*self.n):
+            d = i % 3
             for j in range(self.m):
-                d = i%3
-                NablaPhi_matrix[i,j] = self.partial_derivative_phi(i,j,d)
+                NablaPhi_matrix[i,j] = self.partial_derivative_phi(int(i/3),j,d)
         self.NablaPhi_matrix = NablaPhi_matrix
         
     def kernel_function(self, x1, x2, sigma, l):
@@ -88,7 +88,7 @@ class GaussianProcessRegressionUtils():
         return sigma**2 * (2*np.pi*(l**2))**(3./2.) * np.exp(-.5*(eigenval*l)**2)
         
     def build_Lambda_matrix(self, sigma, l):
-        self.Lambda = np.diag(self.S_SE(sigma, l, self.eigenvalue(j)) for j in range(self.m) 
+        self.Lambda = np.diag([self.S_SE(sigma, l, self.eigenvalue(j)) for j in range(self.m)])
         
     def build_approximateCovariance_matrix(self):
         self.approx_K = np.matmul(np.matmul(self.Phi_matrix, self.Lambda), np.transpose(self.Phi_matrix))
