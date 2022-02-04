@@ -6,10 +6,20 @@ class GaussianProcessRegressionUtils():
     def __init__(self, n, m, D, Omega):
         self.n = n 
         self.m = m 
+        if m >= n or int(m**(1/3)) != (m**(1/3)):
+            print("Error: m must be a perfect cube < n. Return.")
+            return
         self.X = np.array([el[0] for el in D])
         self.Y = np.array([el[1] for el in D])
         self.Omega = Omega
-        self.matrix_n = np.ones(shape=(self.m,3)) # still do not know how to implement this...
+        matrix_n = np.ones((m, 3))
+        count = 0
+        for i in range(1, int(m**(1/3))+1):
+            for j in range(1, int(m**(1/3))+1):
+                for k in range(1, int(m**(1/3))+1):
+                    matrix_n[count] = np.array([i, j, k])
+                    count += 1
+        self.matrix_n = matrix_n
             
     def phi_j(self, i, j, range_d=[0, 1, 2]):
         to_ret = 1.
