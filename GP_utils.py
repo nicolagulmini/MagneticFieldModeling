@@ -49,6 +49,7 @@ class GaussianProcessRegressionUtils():
         '''
         return np.pi*.5*self.phi_j(i, j)/np.tan( np.pi * self.matrix_n[j,dim] * (self.X[i,dim]+self.Omega[dim]) / (2 * self.Omega[dim]) )
         
+    '''
     def build_NablaPhi_matrix(self):
         #  I think that the tensor will become a 3n x m matrix
         NablaPhi_matrix = np.ones(shape=(self.n, self.m, 3))
@@ -56,6 +57,16 @@ class GaussianProcessRegressionUtils():
             for j in range(self.m):
                 for d in range(3):
                     NablaPhi_matrix[i,j,d] = self.partial_derivative_phi(i,j,d)
+        self.NablaPhi_matrix = NablaPhi_matrix
+        return self.NablaPhi_matrix
+    '''
+    
+    def build_NablaPhi_matrix(self):
+        NablaPhi_matrix = np.ones(shape=(3*self.n, self.m))
+        for i in range(3*self.n):
+            for j in range(self.m):
+                d = i%3
+                NablaPhi_matrix[i,j] = self.partial_derivative_phi(i,j,d)
         self.NablaPhi_matrix = NablaPhi_matrix
         return self.NablaPhi_matrix
         
