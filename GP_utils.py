@@ -34,7 +34,6 @@ class GaussianProcessRegressionUtils():
             for j in range(self.m):
                 Phi_matrix[i,j] = self.phi_j(i, j)
         self.Phi_matrix = Phi_matrix
-        return self.Phi_matrix
         
     def partial_derivative_phi(self, i, j, dim):
         #dim_list = [0,1,2]
@@ -61,7 +60,6 @@ class GaussianProcessRegressionUtils():
         return self.NablaPhi_matrix
     '''
     
-    
     def build_NablaPhi_matrix(self):
         NablaPhi_matrix = np.ones(shape=(3*self.n, self.m))
         for i in range(3*self.n):
@@ -69,7 +67,6 @@ class GaussianProcessRegressionUtils():
                 d = i%3
                 NablaPhi_matrix[i,j] = self.partial_derivative_phi(i,j,d)
         self.NablaPhi_matrix = NablaPhi_matrix
-        return self.NablaPhi_matrix
         
     def kernel_function(self, x1, x2, sigma, l):
         return ( sigma**2 )*np.exp( - (np.linalg.norm(x1-x2)**2)/(2*l**2) )
@@ -80,7 +77,6 @@ class GaussianProcessRegressionUtils():
             for j in range(self.n):
                 covariance[i,j] = self.kernel_function(self.X[i], self.X[j], sigma, l)
         self.covariance = covariance
-        return self.covariance
     
     def eigenvalue(self, j):
         to_ret = 0
@@ -93,8 +89,6 @@ class GaussianProcessRegressionUtils():
         
     def build_Lambda_matrix(self, sigma, l):
         self.Lambda = np.diag(self.S_SE(sigma, l, self.eigenvalue(j)) for j in range(self.m) 
-        return self.Lambda
         
     def build_approximateCovariance_matrix(self):
         self.approx_K = np.matmul(np.matmul(self.Phi_matrix, self.Lambda), np.transpose(self.Phi_matrix))
-        return self.approx_K
