@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 class GaussianProcessRegressionUtils():
     
     def __init__(self, n, m, D, Omega, sens=1.e-10): # change sens if you have troubles with m
-        self.n = n 
-        self.m = m 
         if (m >= n) or (abs(m**(1./3.)-round(m**(1./3.))) > 1.e-10):
             print("Error: m must be a perfect cube < n. Return.")
             return
+        self.n = n 
+        self.m = m 
         self.X = np.array([el[0] for el in D])
         self.Y = np.array([el[1] for el in D])
         self.Omega = Omega
@@ -37,14 +37,17 @@ class GaussianProcessRegressionUtils():
         return self.Phi_matrix
         
     def partial_derivative_phi(self, i, j, dim):
-        dim_list = [0,1,2]
+        #dim_list = [0,1,2]
         if dim not in dim_list:
             print("Error: derivative is only for x, y or z dimension. Return.")
             return
+        ''' # unoptimised method
         cos_term = (1/np.sqrt(self.Omega[dim])) * np.cos( np.pi * self.matrix_n[j,dim] * (self.X[i,dim]+self.Omega[dim]) / (2 * self.Omega[dim]) ) * ( (np.pi * self.matrix_n[j,dim]) / (2 * self.Omega[dim]) )
         dim_list.remove(dim)
         other_term = self.phi_j(i, j, range_d=dim_list)
-        return cos_term*other_term
+        return cos_term*other_term    
+        '''
+        return np.pi*.5*self.phi_j(i, j)/np.tan( np.pi * self.matrix_n[j,dim] * (self.X[i,dim]+self.Omega[dim]) / (2 * self.Omega[dim]) )
         
     def build_NablaPhi_matrix(self):
         #  I think that the tensor will become a 3n x m matrix
