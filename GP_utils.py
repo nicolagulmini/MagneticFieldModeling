@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 
 class GaussianProcessRegressionUtils():
     
-    def __init__(self, n, m, D, Omega, sens=1.e-10): # change sens if you have troubles with m
-        if (m >= n) or (abs(m**(1./3.)-round(m**(1./3.))) > 1.e-10):
+    def __init__(self, n, m, X, Y, Omega, sens=1.e-10): # change sens if you have troubles with m
+        if (m >= n) or (abs(m**(1./3.)-round(m**(1./3.))) > 1.e-10) or (X.shape[0] != n):
             print("Error: m must be a perfect cube < n. Return.")
             return
         self.n = n 
         self.m = m 
-        self.X = np.array([el[0] for el in D])
-        self.Y = np.array([el[1] for el in D])
+        self.X = X
+        self.Y = Y
         self.Omega = Omega
         matrix_n = np.ones((m, 3))
         count = 0
