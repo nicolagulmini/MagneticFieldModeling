@@ -93,3 +93,24 @@ class GaussianProcessRegressionUtils():
         
     def build_approximateCovariance_matrix(self):
         self.approx_K = np.matmul(np.matmul(self.Phi_matrix, self.Lambda), np.transpose(self.Phi_matrix))
+        
+    def eval_phi_j(self, x, j, range_d=[0, 1, 2]):
+        to_ret = 1.
+        for d in range_d:
+            to_ret *= (1/np.sqrt(self.Omega[d])) * np.sin( (np.pi * self.matrix_n[j,d] * (x[d]+self.Omega[d])) / (2 * self.Omega[d]) )
+        return to_ret
+    
+    def eval_partial_derivative_phi(self, x, j, dim):
+        return np.pi*.5*self.eval_phi_j(x, j)/np.tan( np.pi * self.matrix_n[j,dim] * (x+self.Omega[dim]) / (2 * self.Omega[dim]) )
+
+    def compute_approx_expectation(self, x, sigma, l, sigma_noise):
+        first_term = np.ones(shape=(3, self.m))
+        for i in range(3):
+            for j in range(m):
+                first_term[i][j] = self.eval_partial_derivative_phi(x, j, i)
+
+        second_term = np.linalg.inv(np.matmul(np.transpose(self.NablaPhi_matrix), self.NablaPhi_matrix) + sigma_noise**2*np.linalg.inv(self.Lambda))
+        mul = np.matmul(first_term, second_term)
+        mul = np.matmul(mul, np.transpose(self.NablaPhi_matrix))
+        mul = np.matmul(mul, self.vecY)
+        return mul
