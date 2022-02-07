@@ -11,6 +11,7 @@ class GaussianProcessRegressionUtils():
         self.m = m 
         self.X = X
         self.Y = Y
+        self.vecY = np.concatenate(self.Y, axis=None)
         self.Omega = Omega
         matrix_n = np.ones((m, 3))
         count = 0
