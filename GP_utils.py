@@ -126,9 +126,9 @@ class GaussianProcessRegressionUtils():
         vecYmul = np.matmul(vecY_T, self.vecY)
         NTN_Phi = np.matmul(NablaPhi_matrix_T, self.NablaPhi_matrix)
 
-        first_term = (3*n-m) * np.log(sn2) + tr_Lambda + np.linalg.slogdet(sn2*Lambda_inv+NTN_Phi)[1]
-        sec_term = vecYmul - np.matmul(np.matmul(np.matmul(np.matmul(vecY_T, GPmodel.NablaPhi_matrix), np.linalg.inv(sn2*Lambda_inv+NTN_Phi)), NablaPhi_matrix_T), self.vecY)
+        first_term = (3*self.n-self.m) * np.log(sn2) + tr_Lambda + np.linalg.slogdet(sn2*Lambda_inv+NTN_Phi)[1]
+        sec_term = vecYmul - np.matmul(np.matmul(np.matmul(np.matmul(vecY_T, self.NablaPhi_matrix), np.linalg.inv(sn2*Lambda_inv+NTN_Phi)), NablaPhi_matrix_T), self.vecY)
         sec_term /= sn2
-        third_term = 3*n*np.log(2*np.pi)
+        third_term = 3*self.n*np.log(2*np.pi)
         loss = first_term + sec_term + third_term
         return .5*loss
