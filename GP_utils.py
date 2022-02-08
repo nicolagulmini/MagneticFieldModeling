@@ -116,3 +116,19 @@ class GaussianProcessRegressionUtils():
         mul = np.matmul(mul, np.transpose(self.NablaPhi_matrix))
         mul = np.matmul(mul, self.vecY)
         return mul
+    
+    def compute_approx_likelihood(self, sigma, l, sigma_noise):
+        NablaPhi_matrix_T = np.transpose(self.NablaPhi_matrix)
+        sn2 = sigma_noise**2
+        tr_Lambda = np.sum(self.Lambda)
+        Lambda_inv = np.linalg.inv(self.Lambda)
+        vecY_T = np.transpose(self.vecY)
+        vecYmul = np.matmul(vecY_T, self.vecY)
+        NTN_Phi = np.matmul(NablaPhi_matrix_T, self.NablaPhi_matrix)
+
+        first_term = (3*n-m) * np.log(sn2) + tr_Lambda + np.linalg.slogdet(sn2*Lambda_inv+NTN_Phi)[1]
+        sec_term = vecYmul - np.matmul(np.matmul(np.matmul(np.matmul(vecY_T, GPmodel.NablaPhi_matrix), np.linalg.inv(sn2*Lambda_inv+NTN_Phi)), NablaPhi_matrix_T), self.vecY)
+        sec_term /= sn2
+        third_term = 3*n*np.log(2*np.pi)
+        loss = first_term + sec_term + third_term
+    return .5*loss # without some terms (like a regularization) to prevent numerical instabilites
