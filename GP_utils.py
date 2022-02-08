@@ -92,7 +92,9 @@ class GaussianProcessRegressionUtils():
         self.Lambda = np.diag([self.S_SE(sigma, l, self.eigenvalue(j)) for j in range(self.m)])
         
     def build_approximateCovariance_matrix(self):
-        self.approx_K = np.matmul(np.matmul(self.Phi_matrix, self.Lambda), np.transpose(self.Phi_matrix))
+        phi_T = np.transpose(self.Phi_matrix)
+        first_term = np.matmul(self.Phi_matrix, self.Lambda)
+        self.approx_K = np.matmul(first_term, phi_T)
         
     def eval_phi_j(self, x, j, range_d=[0, 1, 2]):
         to_ret = 1.
