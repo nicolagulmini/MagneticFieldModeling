@@ -131,4 +131,4 @@ class GaussianProcessRegressionUtils():
         sec_term /= sn2
         third_term = 3*n*np.log(2*np.pi)
         loss = first_term + sec_term + third_term
-    return .5*loss # without some terms (like a regularization) to prevent numerical instabilites
+        return .5*loss # without some terms (like a regularization) to prevent numerical instabilites
