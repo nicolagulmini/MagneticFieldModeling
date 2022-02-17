@@ -1,6 +1,6 @@
 # Magnetic Field Interpolation through Gaussian Process Regression
 
-Python implementation of an algorithm to model and interpolate the magnetic field. The objective is to apply it on the EMT system developed by [Biomedical Design Laboratory](https://biodesignucc.ie/build/html/index.html) ([University College Cork](https://www.ucc.ie/en/), Ireland) to mitigate the distortions. The challenge is to develop a software with good real time performances (about 20 kHz), which has also to assist the operator during the calibration of the instrument in a fast and simple way.
+Python implementation of an algorithm to model and interpolate the magnetic field. The objective is to apply it on the EMT system developed by [Biomedical Design Laboratory](https://biodesignucc.ie/build/html/index.html) ([University College Cork](https://www.ucc.ie/en/), Ireland) to mitigate the distortions. The challenge is to develop a software with good real time performances, which has also to assist the operator during the calibration of the instrument in a fast and simple way.
 
 The GP regressor is trained using a cloud of randomly sampled points inside a fixed volume. The validation set is a regular grid of points in which the three magnetic field components have to be predicted (the plot shows only the magnitude). 
 
