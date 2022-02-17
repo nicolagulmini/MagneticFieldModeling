@@ -17,5 +17,4 @@ Since in a realistic scenario the magnetic field is not known, to know if the mo
 The following .gif shows the evolution of the error and the uncertainty over the validation points changing the cardinality of the training set. The reason why we have chosen a cube as a portion of space is that the system is designed as shown in the other plot. 8 coils generate the field inside a cubic portion of space, and for now we are focusing only on a fraction of it.
 
 ![comparison](https://user-images.githubusercontent.com/62892813/154314386-9d2d61eb-031f-4a78-9292-9b6344e7d532.gif)
-
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/62892813/154541454-aff8b2c4-6218-4c3a-9e4a-2fe8c0c7fc66.gif)
