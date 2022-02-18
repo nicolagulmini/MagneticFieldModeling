@@ -22,3 +22,8 @@ The next two .gif show the evolution of the confidence intervals during the trai
 
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/62892813/154541454-aff8b2c4-6218-4c3a-9e4a-2fe8c0c7fc66.gif)
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/62892813/154707767-c44c99e3-351c-4730-8800-e2a3f8aec33a.gif)
+
+Using 24-dim points (8 coils x 3 magnetic fields components) instead of using only the first coil, the results are better, and the required computational time still remains acceptable. For instance, the correlation between the error and the uncertainty of the prediction starts to seem linear, as shown in the following plot.
+
+![corr mae and std dev](https://user-images.githubusercontent.com/62892813/154728116-7a33c79b-0b48-4137-bd9a-2719674395b2.png)
+
