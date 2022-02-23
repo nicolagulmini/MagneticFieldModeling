@@ -9,9 +9,9 @@ from tensorflow.keras import regularizers
 
 class neural_network:
     
-    def __init__(self, rbf=False, lr=.001):
+    def __init__(self, rbf=False, learning_rate=.001):
         
-        self.lr = .001
+        self.lr = learning_rate
         
         position = Input(shape=(3), name='input_position')
         orientation = Input(shape=(3), name='input_orientation')
