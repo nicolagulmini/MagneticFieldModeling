@@ -25,6 +25,7 @@ class neural_network:
         model.compile(optimizer=Adam(learning_rate=self.lr), loss='mse', metrics=['mse'])
         
         self.model = model
+        self.magnetic_field_components_predictor = Model(inputs=model.get_layer('input_position').input, outputs=model.get_layer('magnetic_field_components').output)
         
     def train(self, x_pos, x_or, y, verbose=0, max_epochs=200, patience_for_early_stopping=10):
         # train - validation division at the moment, no dataset are saved inside the class
