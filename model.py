@@ -14,7 +14,11 @@ class neural_network:
         position = Input(shape=(3), name='input_position')
         orientation = Input(shape=(3), name='input_orientation')
         
-        x = Dense(3, activation='linear', name='magnetic_field_components')(position) 
+        # try to increase the size of the neural network
+        x = Dense(10, activation='sigmoid', name='intermediate_layer')(position)
+        # only with this layer
+        
+        x = Dense(3, activation='linear', name='magnetic_field_components')(x) 
         '''
         if rbf:
             x = RBFLayer(3, .5, name='rbf')(x) # 3 is the dimension, .5 means the 2 at denominator of the exponent 
