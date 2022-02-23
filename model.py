@@ -34,13 +34,14 @@ class RBFLayer(Layer):
 
 class neural_network:
     
-    def __init__(self):
+    def __init__(self, rbf=False):
 
         position = Input(shape=(3), name='input_position')
         orientation = Input(shape=(3), name='input_orientation')
         
         x = Dense(3, activation='linear', name='magnetic_field_components')(position) 
-        x = RBFLayer(3, .5, name='rbf')(x) # 3 is the dimension, .5 means the 2 at denominator of the exponent 
+        if rbf:
+            x = RBFLayer(3, .5, name='rbf')(x) # 3 is the dimension, .5 means the 2 at denominator of the exponent 
         x = Dot(axes=1, name='output')([x, orientation])
         
         model = Model(inputs=[position, orientation], outputs=x)
