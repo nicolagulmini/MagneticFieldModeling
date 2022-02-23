@@ -3,7 +3,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dot
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras import regularizers
 
@@ -34,7 +34,7 @@ class neural_network:
         x = Dot(axes=1, name='output')([x, orientation])
         
         model = Model(inputs=[position, orientation], outputs=x)
-        model.compile(optimizer=SGD(learning_rate=self.lr), loss='mae', metrics=['mae'])
+        model.compile(optimizer=Adam(learning_rate=self.lr), loss='mae', metrics=['mae'])
         
         self.model = model
         self.magnetic_field_components_predictor = Model(inputs=model.get_layer('input_position').input, outputs=model.get_layer('magnetic_field_components').output)
