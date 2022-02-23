@@ -17,16 +17,16 @@ class neural_network:
         
         # try to increase the size of the neural network
         x = Dense(32, activation='sigmoid',
-                    kernel_regularizer=regularizers.l2(1e-5),
-                    bias_regularizer=regularizers.l2(1e-5),
-                    activity_regularizer=regularizers.l2(1e-5),
+                    #kernel_regularizer=regularizers.l2(1e-5),
+                    #bias_regularizer=regularizers.l2(1e-5),
+                    #activity_regularizer=regularizers.l2(1e-5),
                     name='intermediate_layer')(position)
         # only with this layer
         
         x = Dense(3, activation='linear', 
-                    kernel_regularizer=regularizers.l2(1e-5),
-                    bias_regularizer=regularizers.l2(1e-5),
-                    activity_regularizer=regularizers.l2(1e-5),
+                    #kernel_regularizer=regularizers.l2(1e-5),
+                    #bias_regularizer=regularizers.l2(1e-5),
+                    #activity_regularizer=regularizers.l2(1e-5),
                     name='magnetic_field_components')(x) 
         '''
         if rbf:
@@ -40,7 +40,7 @@ class neural_network:
         self.model = model
         self.magnetic_field_components_predictor = Model(inputs=model.get_layer('input_position').input, outputs=model.get_layer('magnetic_field_components').output)
         
-    def train(self, x_pos, x_or, y, verbose=0, max_epochs=200, patience_for_early_stopping=10):
+    def train(self, x_pos, x_or, y, verbose=0, max_epochs=200, batch=32, patience_for_early_stopping=10):
         # train - validation division at the moment, no dataset are saved inside the class
         x_pos_train = x_pos[:int(.75*x_pos.shape[0])]
         x_orientation_train = x_or[:int(.75*x_or.shape[0])]
@@ -52,6 +52,7 @@ class neural_network:
         
         history = self.model.fit(x=[x_pos_train, x_orientation_train], 
                        y=y_train,
+                       batch_size=batch,
                        validation_data=([x_pos_val, x_orientation_val], y_val), 
                        verbose=verbose, 
                        epochs=max_epochs, 
