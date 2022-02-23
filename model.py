@@ -35,7 +35,7 @@ class neural_network:
         x = Dot(axes=1, name='output')([x, orientation])
         
         model = Model(inputs=[position, orientation], outputs=x)
-        model.compile(optimizer=Adam(learning_rate=self.lr), loss='mse', metrics=['mse'])
+        model.compile(optimizer=Adam(learning_rate=self.lr), loss='mae', metrics=['mae'])
         
         self.model = model
         self.magnetic_field_components_predictor = Model(inputs=model.get_layer('input_position').input, outputs=model.get_layer('magnetic_field_components').output)
@@ -65,11 +65,11 @@ class neural_network:
         
     def print_training_performance(self, save=False):
         import matplotlib.pyplot as plt
-        plt.plot(range(len(self.last_history.history['mse'])), self.last_history.history['mse'], ls='--', color='green', label='train mse')
-        plt.plot(range(len(self.last_history.history['val_mse'])), self.last_history.history['val_mse'], ls='--', color='red', label='validation mse')
+        plt.plot(range(len(self.last_history.history['mae'])), self.last_history.history['mae'], ls='--', color='green', label='train mse')
+        plt.plot(range(len(self.last_history.history['val_mae'])), self.last_history.history['val_mae'], ls='--', color='red', label='validation mse')
         plt.legend(loc='upper right')
         plt.xlabel('epochs')
-        plt.ylabel('mse')
+        plt.ylabel('mae')
         plt.grid(linewidth=.5, color='gray')
         plt.title('Training performance')
         if save:
