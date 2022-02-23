@@ -1,12 +1,13 @@
-from keras.layers import Input
-from keras.layers import Dense
-from keras.layers import Dot
-from keras.models import Model
+from tensorflow.keras.layers import Input
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dot
+from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
-from keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import EarlyStopping
 
-from keras.layers import Layer
-from keras import backend as K
+# from stack overflow ########################################################
+from tensorflow.keras.layers import Layer
+from tensorflow.keras import backend as K
 
 class RBFLayer(Layer):
     def __init__(self, units, gamma, **kwargs):
@@ -29,7 +30,7 @@ class RBFLayer(Layer):
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], self.units)
-
+###############################################################################
 
 class neural_network:
     
@@ -46,3 +47,6 @@ class neural_network:
         model.compile(optimizer=Adam(learning_rate=0.01), loss='mse', metrics=['mse'])
         
         self.model = model
+        
+    def info(self):
+        self.model.summary()
