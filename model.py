@@ -36,13 +36,6 @@ class neural_network:
         x_orientation_val = x_or[int(.75*x_or.shape[0]):]
         y_val = y[int(.75*y.shape[0]):]
         
-        print(x_pos_train.shape)
-        print(x_orientation_train.shape)
-        print(y_train.shape)
-        print(x_pos_val.shape)
-        print(x_orientation_val.shape)
-        print(y_val.shape)
-        
         history = self.model.fit(x=[x_pos_train, x_orientation_train], 
                        y=y_train,
                        validation_data=([x_pos_val, x_orientation_val], y_val), 
