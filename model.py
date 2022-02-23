@@ -51,7 +51,7 @@ class neural_network:
         
         self.model = model
         
-    def train(x_pos, x_or, y, verbose=0, max_epochs=200, patience_for_early_stopping=10):
+    def train(self, x_pos, x_or, y, verbose=0, max_epochs=200, patience_for_early_stopping=10):
         # train - validation division at the moment, no dataset are saved inside the class
         x_pos_train = x_pos[:int(.75*x_pos.shape[0])]
         x_orientation_train = x_or[:int(.75*x_or.shape[0])]
