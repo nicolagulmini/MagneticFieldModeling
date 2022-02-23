@@ -1,6 +1,7 @@
 from tensorflow.keras.layers import Input
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dot
+from tensorflow.keras.layers import Dropout
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping
@@ -15,16 +16,13 @@ class neural_network:
         position = Input(shape=(3), name='input_position')
         orientation = Input(shape=(3), name='input_orientation')
         
-        # try to increase the size of the neural network
-        x = Dense(7, activation='sigmoid',
-                    #kernel_regularizer=regularizers.l2(1e-5),
+        x = Dense(10, activation='sigmoid',
                     #bias_regularizer=regularizers.l2(1e-5),
                     #activity_regularizer=regularizers.l2(1e-5),
                     name='intermediate_layer')(position)
         # only with this layer
         
-        x = Dense(3, activation='linear', 
-                    #kernel_regularizer=regularizers.l2(1e-5),
+        x = Dense(3, activation='linear',
                     #bias_regularizer=regularizers.l2(1e-5),
                     #activity_regularizer=regularizers.l2(1e-5),
                     name='magnetic_field_components')(x) 
