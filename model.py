@@ -53,3 +53,17 @@ class neural_network:
         
     def info(self):
         self.model.summary()
+        
+    def print_training_performance(self, save=False):
+        import matplotlib.pyplot as plt
+        plt.plot(range(len(self.last_history.history['mse'])), self.last_history.history['mse'], ls='--', color='green', label='train mse')
+        plt.plot(range(len(self.last_history.history['val_mse'])), self.last_history.history['val_mse'], ls='--', color='red', label='validation mse')
+        plt.legend(loc='upper right')
+        plt.xlabel('epochs')
+        plt.ylabel('mse')
+        plt.grid(linewidth=.5, color='gray')
+        plt.title('Training performance')
+        if save:
+            plt.savefig('training_performance.png')
+        else:
+            plt.show()
