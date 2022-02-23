@@ -34,8 +34,10 @@ class RBFLayer(Layer):
 
 class neural_network:
     
-    def __init__(self, rbf=False):
-
+    def __init__(self, rbf=False, lr=.001):
+        
+        self.lr = .001
+        
         position = Input(shape=(3), name='input_position')
         orientation = Input(shape=(3), name='input_orientation')
         
@@ -45,7 +47,7 @@ class neural_network:
         x = Dot(axes=1, name='output')([x, orientation])
         
         model = Model(inputs=[position, orientation], outputs=x)
-        model.compile(optimizer=Adam(learning_rate=0.01), loss='mse', metrics=['mse'])
+        model.compile(optimizer=Adam(learning_rate=self.lr), loss='mse', metrics=['mse'])
         
         self.model = model
         
