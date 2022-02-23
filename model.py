@@ -9,9 +9,10 @@ from tensorflow.keras import regularizers
 
 class neural_network:
     
-    def __init__(self, rbf=False, learning_rate=.001):
+    def __init__(self, rbf=False, learning_rate=.001, loss='mse'):
         
         self.lr = learning_rate
+        self.loss = loss
         
         position = Input(shape=(3), name='input_position')
         orientation = Input(shape=(3), name='input_orientation')
@@ -34,7 +35,7 @@ class neural_network:
         x = Dot(axes=1, name='output')([x, orientation])
         
         model = Model(inputs=[position, orientation], outputs=x)
-        model.compile(optimizer=Adam(learning_rate=self.lr), loss='mae', metrics=['mae'])
+        model.compile(optimizer=Adam(learning_rate=self.lr), loss=self.loss, metrics=[self.loss])
         
         self.model = model
         self.magnetic_field_components_predictor = Model(inputs=model.get_layer('input_position').input, outputs=model.get_layer('magnetic_field_components').output)
@@ -64,11 +65,11 @@ class neural_network:
         
     def print_training_performance(self, save=False):
         import matplotlib.pyplot as plt
-        plt.plot(range(len(self.last_history.history['mae'])), self.last_history.history['mae'], ls='--', color='green', label='train mae')
-        plt.plot(range(len(self.last_history.history['val_mae'])), self.last_history.history['val_mae'], ls='--', color='red', label='validation mae')
+        plt.plot(range(len(self.last_history.history[self.loss])), self.last_history.history['mae'], ls='--', color='green', label="train "+self.loss)
+        plt.plot(range(len(self.last_history.history["val_"+self.loss])), self.last_history.history[["val_"+self.loss], ls='--', color='red', label="validation "+self.loss)
         plt.legend(loc='upper right')
         plt.xlabel('epochs')
-        plt.ylabel('mae')
+        plt.ylabel(self.loss)
         plt.grid(linewidth=.5, color='gray')
         plt.title('Training performance')
         if save:
