@@ -16,6 +16,7 @@ class neural_network:
         
         # try to increase the size of the neural network
         x = Dense(10, activation='sigmoid', name='intermediate_layer')(position)
+        x = Dense(10, activation='sigmoid', name='intermediate_layer_2')(x)
         # only with this layer
         
         x = Dense(3, activation='linear', name='magnetic_field_components')(x) 
