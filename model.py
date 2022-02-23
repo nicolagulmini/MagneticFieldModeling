@@ -16,7 +16,7 @@ class neural_network:
         orientation = Input(shape=(3), name='input_orientation')
         
         # try to increase the size of the neural network
-        x = Dense(32, activation='sigmoid', activity_regularizer=regularizers.l2(1e-5), name='intermediate_layer')(position)
+        x = Dense(32, activation='sigmoid', activity_regularizer=regularizers.l2(1e-3), name='intermediate_layer')(position)
         # only with this layer
         
         x = Dense(3, activation='linear', name='magnetic_field_components')(x) 
