@@ -64,8 +64,8 @@ class neural_network:
         
     def print_training_performance(self, save=False):
         import matplotlib.pyplot as plt
-        plt.plot(range(len(self.last_history.history['mae'])), self.last_history.history['mae'], ls='--', color='green', label='train mse')
-        plt.plot(range(len(self.last_history.history['val_mae'])), self.last_history.history['val_mae'], ls='--', color='red', label='validation mse')
+        plt.plot(range(len(self.last_history.history['mae'])), self.last_history.history['mae'], ls='--', color='green', label='train mae')
+        plt.plot(range(len(self.last_history.history['val_mae'])), self.last_history.history['val_mae'], ls='--', color='red', label='validation mae')
         plt.legend(loc='upper right')
         plt.xlabel('epochs')
         plt.ylabel('mae')
