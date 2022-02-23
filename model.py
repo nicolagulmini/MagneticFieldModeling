@@ -16,7 +16,7 @@ class neural_network:
         orientation = Input(shape=(3), name='input_orientation')
         
         # try to increase the size of the neural network
-        x = Dense(5, activation='sigmoid',
+        x = Dense(7, activation='sigmoid',
                     #kernel_regularizer=regularizers.l2(1e-5),
                     #bias_regularizer=regularizers.l2(1e-5),
                     #activity_regularizer=regularizers.l2(1e-5),
