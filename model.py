@@ -17,13 +17,17 @@ class neural_network:
         
         # try to increase the size of the neural network
         x = Dense(32, activation='sigmoid',
-                    kernel_regularizer=regularizers.l2(1e-4),
-                    bias_regularizer=regularizers.l2(1e-4),
+                    kernel_regularizer=regularizers.l2(1e-5),
+                    bias_regularizer=regularizers.l2(1e-5),
                     activity_regularizer=regularizers.l2(1e-5),
                     name='intermediate_layer')(position)
         # only with this layer
         
-        x = Dense(3, activation='linear', name='magnetic_field_components')(x) 
+        x = Dense(3, activation='linear', 
+                    kernel_regularizer=regularizers.l2(1e-5),
+                    bias_regularizer=regularizers.l2(1e-5),
+                    activity_regularizer=regularizers.l2(1e-5),
+                    name='magnetic_field_components')(x) 
         '''
         if rbf:
             x = RBFLayer(3, .5, name='rbf')(x) # 3 is the dimension, .5 means the 2 at denominator of the exponent 
