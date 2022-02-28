@@ -19,7 +19,7 @@ class neural_network:
         orientation = Input(shape=(3), name='input_orientation')
         
         x = Dense(30, activation='sigmoid',
-                    #bias_regularizer=regularizers.l2(1e-1),
+                    bias_regularizer=regularizers.l2(1e-3),
                     kernel_regularizer=regularizers.l2(1e-3),
                     kernel_initializer="random_normal",
                     use_bias=True,
@@ -29,7 +29,6 @@ class neural_network:
         x = Dropout(.2)(x)
         
         x = Dense(3, activation='linear',
-                    #bias_regularizer=regularizers.l2(1e-1),
                     kernel_regularizer=regularizers.l2(1e-3),
                     kernel_initializer="random_normal",
                     use_bias=False,
