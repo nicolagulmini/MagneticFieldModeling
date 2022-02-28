@@ -21,7 +21,7 @@ class neural_network:
         x = Dense(30, activation='sigmoid',
                     #bias_regularizer=regularizers.l2(1e-1),
                     kernel_regularizer=regularizers.l2(1e-3),
-                    use_bias=True,
+                    use_bias=False,
                     name='intermediate_layer')(position)
         
         x = Dropout(.2)(x)
