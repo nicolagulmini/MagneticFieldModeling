@@ -98,6 +98,14 @@ class tridim_nn:
         
         x = Dropout(.3)(x)
         
+        x = Dense(3, activation='linear',
+                    bias_regularizer=regularizers.l2(1e-3),
+                    kernel_regularizer=regularizers.l2(1e-3),
+                    kernel_initializer="random_normal",
+                    use_bias=True,
+                    bias_initializer='zeros',
+                    name='intermediate_layer')(x)
+        
         model = Model(inputs=position, outputs=x)
         model.compile(optimizer=Adam(learning_rate=.001), loss='mse', metrics=['mse'])
         
