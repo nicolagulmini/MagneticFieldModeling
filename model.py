@@ -93,6 +93,7 @@ class tridim_nn:
         x = Dense(100, activation='sigmoid')(x)
         x = Dense(100, activation='sigmoid')(x)
         x = Dense(100, activation='sigmoid')(x)
+        x = Dense(100, activation='sigmoid')(x)
         x = Dense(3, activation='linear')(x)
         
         model = Model(inputs=position, outputs=x)
