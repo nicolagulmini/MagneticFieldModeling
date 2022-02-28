@@ -88,7 +88,7 @@ class tridim_nn:
         
         position = Input(shape=(3), name='input_position')
         
-        x = Dense(30, activation='linear',
+        x = Dense(30, activation='sigmoid',
                     bias_regularizer=regularizers.l2(1e-3),
                     kernel_regularizer=regularizers.l2(1e-3),
                     kernel_initializer="random_normal",
