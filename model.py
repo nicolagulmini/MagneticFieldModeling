@@ -26,16 +26,8 @@ class neural_network:
                     bias_initializer='zeros',
                     name='intermediate_layer')(position)
         
-        x = Dropout(.2)(x)
-        
-        x = Dense(30, activation='sigmoid',
-                    bias_regularizer=regularizers.l2(1e-3),
-                    kernel_regularizer=regularizers.l2(1e-3),
-                    kernel_initializer="random_normal",
-                    use_bias=True,
-                    bias_initializer='zeros',
-                    name='intermediate_layer_2')(x)
-        
+        x = Dropout(.3)(x)
+                
         x = Dense(3, activation='linear',
                     kernel_regularizer=regularizers.l2(1e-3),
                     kernel_initializer="random_normal",
