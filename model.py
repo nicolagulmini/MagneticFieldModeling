@@ -88,9 +88,13 @@ class tridim_nn:
         
         position = Input(shape=(3), name='input_position')
         
-        x = Dense(30, activation='sigmoid', name='intermediate_layer')(position)
+        x = Dense(10, activation='sigmoid')(position)
+        x = Dropout(.1)(x)
+        x = Dense(10, activation='sigmoid')(x)
+        x = Dropout(.2)(x)
+        x = Dense(10, activation='sigmoid')(x)
         x = Dropout(.3)(x)
-        x = Dense(3, activation='linear', name='intermediate_layer_2')(x)
+        x = Dense(3, activation='linear')(x)
         
         model = Model(inputs=position, outputs=x)
         model.compile(optimizer=Adam(learning_rate=.001), loss='mse', metrics=['mse'])
