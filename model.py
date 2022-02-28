@@ -18,7 +18,7 @@ class neural_network:
         position = Input(shape=(3), name='input_position')
         orientation = Input(shape=(3), name='input_orientation')
         
-        x = Dense(50, activation='sigmoid',
+        x = Dense(30, activation='sigmoid',
                     bias_regularizer=regularizers.l2(1e-3),
                     kernel_regularizer=regularizers.l2(1e-3),
                     kernel_initializer="random_normal",
@@ -27,6 +27,14 @@ class neural_network:
                     name='intermediate_layer')(position)
         
         x = Dropout(.2)(x)
+        
+        x = Dense(30, activation='sigmoid',
+                    bias_regularizer=regularizers.l2(1e-3),
+                    kernel_regularizer=regularizers.l2(1e-3),
+                    kernel_initializer="random_normal",
+                    use_bias=True,
+                    bias_initializer='zeros',
+                    name='intermediate_layer')(x)
         
         x = Dense(3, activation='linear',
                     kernel_regularizer=regularizers.l2(1e-3),
