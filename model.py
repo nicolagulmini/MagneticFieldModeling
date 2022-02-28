@@ -29,7 +29,7 @@ class neural_network:
         x = Dense(3, activation='linear',
                     #bias_regularizer=regularizers.l2(1e-1),
                     kernel_regularizer=regularizers.l2(1e-3),
-                    use_bias=False,
+                    use_bias=True,
                     name='magnetic_field_components')(x) 
         '''
         if rbf:
