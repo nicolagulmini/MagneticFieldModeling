@@ -20,14 +20,14 @@ class neural_network:
         
         x = Dense(30, activation='sigmoid',
                     #bias_regularizer=regularizers.l2(1e-1),
-                    activity_regularizer=regularizers.l2(1e-1),
+                    activity_regularizer=regularizers.l2(1e-3),
                     name='intermediate_layer')(position)
         
         x = Dropout(.2)(x)
         
         x = Dense(3, activation='linear',
                     #bias_regularizer=regularizers.l2(1e-1),
-                    activity_regularizer=regularizers.l2(1e-1),
+                    activity_regularizer=regularizers.l2(1e-3),
                     name='magnetic_field_components')(x) 
         '''
         if rbf:
