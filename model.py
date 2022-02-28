@@ -81,3 +81,24 @@ class neural_network:
             plt.savefig('training_performance.png')
         else:
             plt.show()
+            
+class tridim_nn:
+    
+    def __init__(self):
+        
+        position = Input(shape=(3), name='input_position')
+        
+        x = Dense(30, activation='linear',
+                    bias_regularizer=regularizers.l2(1e-3),
+                    kernel_regularizer=regularizers.l2(1e-3),
+                    kernel_initializer="random_normal",
+                    use_bias=True,
+                    bias_initializer='zeros',
+                    name='intermediate_layer')(position)
+        
+        x = Dropout(.3)(x)
+        
+        model = Model(inputs=position, outputs=x)
+        model.compile(optimizer=Adam(learning_rate=self.lr), loss=self.loss, metrics=[self.loss])
+        
+        self.model = model
