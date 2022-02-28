@@ -34,7 +34,7 @@ class neural_network:
                     kernel_initializer="random_normal",
                     use_bias=True,
                     bias_initializer='zeros',
-                    name='intermediate_layer')(x)
+                    name='intermediate_layer_2')(x)
         
         x = Dense(3, activation='linear',
                     kernel_regularizer=regularizers.l2(1e-3),
