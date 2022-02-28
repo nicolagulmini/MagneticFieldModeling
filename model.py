@@ -99,6 +99,6 @@ class tridim_nn:
         x = Dropout(.3)(x)
         
         model = Model(inputs=position, outputs=x)
-        model.compile(optimizer=Adam(learning_rate=self.lr), loss=self.loss, metrics=[self.loss])
+        model.compile(optimizer=Adam(learning_rate=.001), loss='mse', metrics=['mse'])
         
         self.model = model
