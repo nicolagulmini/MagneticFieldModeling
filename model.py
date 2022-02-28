@@ -18,6 +18,7 @@ class neural_network:
         position = Input(shape=(3), name='input_position')
         orientation = Input(shape=(3), name='input_orientation')
         
+        '''
         x = Dense(30, activation='sigmoid',
                     bias_regularizer=regularizers.l2(1e-3),
                     kernel_regularizer=regularizers.l2(1e-3),
@@ -33,6 +34,13 @@ class neural_network:
                     kernel_initializer="random_normal",
                     use_bias=False,
                     name='magnetic_field_components')(x) 
+        '''
+        
+        x = Dense(300, activation='sigmoid', bias_regularizer=regularizers.l2(1e-10), kernel_regularizer=regularizers.l2(1e-8), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(position)
+        x = Dense(300, activation='sigmoid', bias_regularizer=regularizers.l2(1e-10), kernel_regularizer=regularizers.l2(1e-8), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)
+        x = Dense(300, activation='sigmoid', bias_regularizer=regularizers.l2(1e-10), kernel_regularizer=regularizers.l2(1e-8), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)        
+        x = Dense(3, activation='linear', kernel_regularizer=regularizers.l2(1e-8), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)
+        
         '''
         if rbf:
             x = RBFLayer(3, .5, name='rbf')(x) # 3 is the dimension, .5 means the 2 at denominator of the exponent 
