@@ -88,11 +88,11 @@ class tridim_nn:
         
         position = Input(shape=(3), name='input_position')
         
-        x = Dense(200, activation='sigmoid', bias_regularizer=regularizers.l2(1e-8), kernel_regularizer=regularizers.l2(1e-8), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(position)
+        x = Dense(300, activation='sigmoid', bias_regularizer=regularizers.l2(1e-8), kernel_regularizer=regularizers.l2(1e-8), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(position)
         #x = Dense(200, activation='sigmoid', bias_regularizer=regularizers.l2(1e-8), kernel_regularizer=regularizers.l2(1e-8), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)
         #x = Dense(200, activation='sigmoid', bias_regularizer=regularizers.l2(1e-7), kernel_regularizer=regularizers.l2(1e-7), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)
-        x = Dense(200, activation='sigmoid', bias_regularizer=regularizers.l2(1e-8), kernel_regularizer=regularizers.l2(1e-8), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)
-        x = Dense(200, activation='sigmoid', bias_regularizer=regularizers.l2(1e-8), kernel_regularizer=regularizers.l2(1e-8), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)
+        x = Dense(300, activation='sigmoid', bias_regularizer=regularizers.l2(1e-8), kernel_regularizer=regularizers.l2(1e-8), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)
+        x = Dense(300, activation='sigmoid', bias_regularizer=regularizers.l2(1e-8), kernel_regularizer=regularizers.l2(1e-8), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)
         x = Dense(3, activation='linear', kernel_regularizer=regularizers.l2(1e-8), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)
         
         model = Model(inputs=position, outputs=x)
