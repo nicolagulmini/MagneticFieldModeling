@@ -94,6 +94,9 @@ class tridim_nn:
         x = Dropout(.2)(x)
         x = Dense(200, activation='sigmoid')(x)
         x = Dropout(.3)(x)
+        x = Dense(200, activation='sigmoid')(x)
+        x = Dropout(.2)(x)
+        x = Dense(200, activation='sigmoid')(x)
         x = Dense(3, activation='linear')(x)
         
         model = Model(inputs=position, outputs=x)
