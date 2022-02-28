@@ -88,13 +88,12 @@ class tridim_nn:
         
         position = Input(shape=(3), name='input_position')
         
-        x = Dense(100, activation='sigmoid')(position)
-        x = Dense(100, activation='sigmoid')(x)
-        x = Dense(100, activation='sigmoid')(x)
-        x = Dense(100, activation='sigmoid')(x)
-        x = Dense(100, activation='sigmoid')(x)
-        x = Dense(100, activation='sigmoid')(x)
-        x = Dense(3, activation='linear')(x)
+        x = Dense(100, activation='sigmoid', bias_regularizer=regularizers.l2(1e-3), kernel_regularizer=regularizers.l2(1e-3), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(position)
+        x = Dense(100, activation='sigmoid', bias_regularizer=regularizers.l2(1e-3), kernel_regularizer=regularizers.l2(1e-3), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)
+        x = Dense(100, activation='sigmoid', bias_regularizer=regularizers.l2(1e-3), kernel_regularizer=regularizers.l2(1e-3), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)
+        x = Dense(100, activation='sigmoid', bias_regularizer=regularizers.l2(1e-3), kernel_regularizer=regularizers.l2(1e-3), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)
+        x = Dense(100, activation='sigmoid', bias_regularizer=regularizers.l2(1e-3), kernel_regularizer=regularizers.l2(1e-3), kernel_initializer="random_normal", use_bias=True, bias_initializer='zeros')(x)
+        x = Dense(3, activation='linear', kernel_regularizer=regularizers.l2(1e-3), kernel_initializer="random_normal", use_bias=False)(x)
         
         model = Model(inputs=position, outputs=x)
         model.compile(optimizer=Adam(learning_rate=.001), loss='mse', metrics=['mse'])
