@@ -104,7 +104,7 @@ class tridim_nn:
                     kernel_initializer="random_normal",
                     use_bias=True,
                     bias_initializer='zeros',
-                    name='intermediate_layer')(x)
+                    name='intermediate_layer_2')(x)
         
         model = Model(inputs=position, outputs=x)
         model.compile(optimizer=Adam(learning_rate=.001), loss='mse', metrics=['mse'])
