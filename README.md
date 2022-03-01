@@ -26,12 +26,3 @@ The next two .gif show the evolution of the confidence intervals during the trai
 Using 24-dim points (8 coils x 3 magnetic fields components) instead of using only the first coil, the results are better, and the required computational time still remains acceptable. For instance, the correlation between the error and the uncertainty of the prediction starts to seem linear, as shown in the following plot.
 
 ![corr mae and std dev](https://user-images.githubusercontent.com/62892813/154728116-7a33c79b-0b48-4137-bd9a-2719674395b2.png)
-
-## Other methods
-
-- [Radial basis function interpolation](https://en.wikipedia.org/wiki/Radial_basis_function_interpolation), with independent magnetic field components but shared kernel hyperparameters, is able to obtain good results in a very fast way, simply through 
-```python
-pred_x = tf.linalg.solve(rbf_kernel(positions, gamma=gamma), measurements_x)
-```
-![radial basis function interpolation](https://user-images.githubusercontent.com/62892813/156217037-22633225-b8d3-4089-a960-90b10475f578.gif)
-
