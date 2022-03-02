@@ -6,7 +6,7 @@ For each described algorithm, the training set is a cloud of randomly sampled po
 
 ![points](https://user-images.githubusercontent.com/62892813/154316415-648a3016-045c-4fa8-8f53-236be1a13eec.png)
 
-## Gaussian Process Regression
+## [Gaussian Process Regression](https://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.GaussianProcessRegressor.html)
 The following plots take into considerations different metrics vs the number of random points in the training set. The evaluations are performed over the same validation set. 
 
 ![comparison metrics training points](https://user-images.githubusercontent.com/62892813/154314397-1cc4b624-e564-4948-8562-c452c58b062f.png)
