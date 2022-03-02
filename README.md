@@ -31,7 +31,7 @@ Using 24-dim points (8 coils x 3 magnetic fields components) instead of using on
 
 Fixing the hyperparameter of the kernel, i.e. the length scale, we can obtain a vector of weights simply solving a linear system of equations for each component. Computing the kernel matrix of the training points, only one line of code is enough to obtain so
 ```Python
-w_x = tf.linalg.solve(kernel, H_x)
+W = np.linalg.solve(rbf_kernel(training_positions, gamma), magnetic_field_measurements)
 ```
 and then, computing the kernel between the training points vs the validation ones, after a matrix multiplication we are able to predict the magnetic field, as shown in the following .gif (changing the hyperparameter)
 
