@@ -29,7 +29,7 @@ Using 24-dim points (8 coils x 3 magnetic fields components) instead of using on
 ![corr mae and std dev](https://user-images.githubusercontent.com/62892813/154728116-7a33c79b-0b48-4137-bd9a-2719674395b2.png)
 
 
-# [Radial Basis Function Interpolation](https://en.wikipedia.org/wiki/Radial_basis_function_interpolation)
+## [Radial Basis Function Interpolation](https://en.wikipedia.org/wiki/Radial_basis_function_interpolation)
 
 Fixing the hyperparameter of the kernel, i.e. the length scale, we can obtain a vector of weights simply solving a linear system of equations for each component. Computing the kernel matrix of the training points, only one line of code is enough to obtain so
 ```Python
