@@ -19,7 +19,7 @@ The following .gif shows the evolution of the error and the uncertainty over the
 
 ![comparison](https://user-images.githubusercontent.com/62892813/154314386-9d2d61eb-031f-4a78-9292-9b6344e7d532.gif)
 
-The next two .gif show the evolution of the confidence intervals during the training, for each one of the three magnetic field components measured on a diagonal of the cube. The first one is a simulation with measurements not affected by noise, the second one yes, with an SNR between the standard deviation and the RMS of -60 dB.
+The next two .gif show the evolution of the confidence intervals during the training, for each one of the three magnetic field components measured on the diagonal of the cube. The first one is a simulation with measurements not affected by noise, the second one yes, with an SNR between the standard deviation and the RMS of -60 dB.
 
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/62892813/154541454-aff8b2c4-6218-4c3a-9e4a-2fe8c0c7fc66.gif)
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/62892813/154707767-c44c99e3-351c-4730-8800-e2a3f8aec33a.gif)
