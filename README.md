@@ -36,5 +36,8 @@ w_x = tf.linalg.solve(kernel, H_x)
 and then, computing the kernel between the training points vs the validation ones, after a matrix multiplication we are able to predict the magnetic field, as shown in the following .gif (changing the hyperparameter)
 
 ![movie](https://user-images.githubusercontent.com/62892813/156361455-8c8ca59d-6acb-43d6-ae93-d0b00065e34f.gif)
+
+and the following plot shows that a small gamma parameter leads to better results in term of validation nmae and nrmse
+
 ![errors](https://user-images.githubusercontent.com/62892813/156388267-4a6c50bb-9e81-403c-b903-86ccab6eadb0.png)
 
