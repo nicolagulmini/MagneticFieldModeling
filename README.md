@@ -4,10 +4,9 @@ Python library to model and interpolate the magnetic field. The objective is to 
 
 For each described algorithm, the training set is a cloud of randomly sampled points inside a fixed volume. The validation set is a regular grid of points in which the three magnetic field components have to be predicted. The cuboids plots shows only the magnitude, while the prediction of the three magnetic field components are shown along the diagonal that starts from a corner of the cuboid and ends up to the opposite one. Here only a brief description of the main results with plots, the numeric results and the theory behind them are left for the paper. 
 
-## Gaussian Process Regression
-
 ![points](https://user-images.githubusercontent.com/62892813/154316415-648a3016-045c-4fa8-8f53-236be1a13eec.png)
 
+## Gaussian Process Regression
 The following plots take into considerations different metrics vs the number of random points in the training set. The evaluations are performed over the same validation set. 
 
 ![comparison metrics training points](https://user-images.githubusercontent.com/62892813/154314397-1cc4b624-e564-4948-8562-c452c58b062f.png)
