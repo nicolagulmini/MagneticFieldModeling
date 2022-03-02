@@ -27,3 +27,15 @@ The next two .gif show the evolution of the confidence intervals during the trai
 Using 24-dim points (8 coils x 3 magnetic fields components) instead of using only the first coil, the results are better, and the required computational time still remains acceptable. For instance, the correlation between the error and the uncertainty of the prediction starts to seem linear, as shown in the following plot.
 
 ![corr mae and std dev](https://user-images.githubusercontent.com/62892813/154728116-7a33c79b-0b48-4137-bd9a-2719674395b2.png)
+
+
+# [Radial Basis Function Interpolation](https://en.wikipedia.org/wiki/Radial_basis_function_interpolation)
+
+Fixing the hyperparameter of the kernel, i.e. the length scale, we can obtain a vector of weights simply solving a linear system of equations for each component. Computing the kernel matrix of the training points, only one line of code is enough to obtain so
+```Python
+w_x = tf.linalg.solve(kernel, H_x)
+```
+and then, computing the kernel between the training points vs the validation ones, after a matrix multiplication we are able to predict the magnetic field, as shown in the following .gif (changing the hyperparameter)
+
+![movie](https://user-images.githubusercontent.com/62892813/156361455-8c8ca59d-6acb-43d6-ae93-d0b00065e34f.gif)
+
