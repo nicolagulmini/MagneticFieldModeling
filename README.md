@@ -24,7 +24,7 @@ The next two .gif show the evolution of the confidence intervals during the trai
 
 Using 24-dim points (8 coils x 3 magnetic fields components) instead of using only the first coil, the results are better, and the required computational time still remains acceptable. For instance, the correlation between the error and the uncertainty of the prediction starts to seem linear, as shown in the following plot.
 
-![corr mae and std dev GP](https://user-images.githubusercontent.com/62892813/156599859-146c9e5c-715a-4dce-8370-d7eb35a56dc3.png)
+![corr mae and std dev](https://user-images.githubusercontent.com/62892813/156613484-59d23443-7b91-4161-ac6c-1c4b553e494d.png)
 
 ## [Radial Basis Function Interpolation](https://en.wikipedia.org/wiki/Radial_basis_function_interpolation)
 
