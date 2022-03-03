@@ -24,8 +24,7 @@ The next two .gif show the evolution of the confidence intervals during the trai
 
 Using 24-dim points (8 coils x 3 magnetic fields components) instead of using only the first coil, the results are better, and the required computational time still remains acceptable. For instance, the correlation between the error and the uncertainty of the prediction starts to seem linear, as shown in the following plot.
 
-![corr mae and std dev](https://user-images.githubusercontent.com/62892813/154728116-7a33c79b-0b48-4137-bd9a-2719674395b2.png)
-
+![corr mae and std dev GP](https://user-images.githubusercontent.com/62892813/156599859-146c9e5c-715a-4dce-8370-d7eb35a56dc3.png)
 
 ## [Radial Basis Function Interpolation](https://en.wikipedia.org/wiki/Radial_basis_function_interpolation)
 
@@ -41,3 +40,6 @@ and the following plot shows that a small gamma parameter leads to better result
 
 ![errors](https://user-images.githubusercontent.com/62892813/156388267-4a6c50bb-9e81-403c-b903-86ccab6eadb0.png)
 
+As done for the GP, here there is a plot about the correlation between the nMAE and the standard deviation (computed through the [Cholensky decomposition](https://stats.stackexchange.com/questions/330185/how-to-calculate-the-standard-deviation-for-a-gaussian-process)) for each one of the 24-dim points
+
+![corr mae and std dev RBF](https://user-images.githubusercontent.com/62892813/156600120-dcf971cb-ce06-461f-b1f1-899830ac44f8.png)
