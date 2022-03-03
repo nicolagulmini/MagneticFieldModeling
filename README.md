@@ -36,10 +36,7 @@ and then, computing the kernel between the training points vs the validation one
 
 ![movie](https://user-images.githubusercontent.com/62892813/156361455-8c8ca59d-6acb-43d6-ae93-d0b00065e34f.gif)
 
-and the following plot shows that a small gamma parameter leads to better results in term of validation nmae and nrmse
+and the following plots show, respectively, that a small gamma parameter leads to better results in term of validation nmae and nrmse, and, as done for the GP, the correlation between the nMAE and the standard deviation (computed through the [Cholensky decomposition](https://stats.stackexchange.com/questions/330185/how-to-calculate-the-standard-deviation-for-a-gaussian-process)) for each one of the 24-dim points
 
 ![errors](https://user-images.githubusercontent.com/62892813/156388267-4a6c50bb-9e81-403c-b903-86ccab6eadb0.png)
-
-As done for the GP, here there is a plot about the correlation between the nMAE and the standard deviation (computed through the [Cholensky decomposition](https://stats.stackexchange.com/questions/330185/how-to-calculate-the-standard-deviation-for-a-gaussian-process)) for each one of the 24-dim points
-
 ![corr mae and std dev RBF](https://user-images.githubusercontent.com/62892813/156600120-dcf971cb-ce06-461f-b1f1-899830ac44f8.png)
