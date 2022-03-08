@@ -40,3 +40,9 @@ and the following plots show, respectively, that a small gamma parameter leads t
 
 ![errors](https://user-images.githubusercontent.com/62892813/156388267-4a6c50bb-9e81-403c-b903-86ccab6eadb0.png)
 ![corr mae and std dev RBF](https://user-images.githubusercontent.com/62892813/156600120-dcf971cb-ce06-461f-b1f1-899830ac44f8.png)
+
+### Custom RBF Interpolation
+
+Taking into account also the orientation information, and with the uniaxial measures (one-dimensional measures of the magnetic field instead of the three components, allowing a smaller sensor), it is possible to interpolate the magnetic field changing the definition of the radial basis function. 
+
+![diag results](https://user-images.githubusercontent.com/62892813/157286164-9d806e2a-c2cf-4332-afda-797c6aa9cbaa.png)
