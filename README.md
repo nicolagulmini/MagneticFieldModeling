@@ -24,20 +24,25 @@ The next two .gif show the evolution of the confidence intervals during the trai
 
 Using 24-dim points (8 coils x 3 magnetic fields components) instead of using only the first coil, the results are better, and the required computational time still remains acceptable. For instance, the correlation between the error and the uncertainty of the prediction starts to seem linear, as shown in the following plot.
 
-![corr mae and std dev](https://user-images.githubusercontent.com/62892813/154728116-7a33c79b-0b48-4137-bd9a-2719674395b2.png)
-
+![corr mae and std dev](https://user-images.githubusercontent.com/62892813/156613484-59d23443-7b91-4161-ac6c-1c4b553e494d.png)
 
 ## [Radial Basis Function Interpolation](https://en.wikipedia.org/wiki/Radial_basis_function_interpolation)
 
 Fixing the hyperparameter of the kernel, i.e. the length scale, we can obtain a vector of weights simply solving a linear system of equations for each component. Computing the kernel matrix of the training points, only one line of code is enough to obtain so
 ```Python
-w_x = tf.linalg.solve(kernel, H_x)
+W = np.linalg.solve(sklearn.metrics.pairwise.rbf_kernel(training_positions, gamma=gamma), magnetic_field_measurements)
 ```
 and then, computing the kernel between the training points vs the validation ones, after a matrix multiplication we are able to predict the magnetic field, as shown in the following .gif (changing the hyperparameter)
 
 ![movie](https://user-images.githubusercontent.com/62892813/156361455-8c8ca59d-6acb-43d6-ae93-d0b00065e34f.gif)
 
-and the following plot shows that a small gamma parameter leads to better results in term of validation nmae and nrmse
+and the following plots show, respectively, that a small gamma parameter leads to better results in term of validation nmae and nrmse, and, as done for the GP, the correlation between the nMAE and the standard deviation (computed through the [Cholensky decomposition](https://stats.stackexchange.com/questions/330185/how-to-calculate-the-standard-deviation-for-a-gaussian-process)) for each one of the 24-dim points
 
 ![errors](https://user-images.githubusercontent.com/62892813/156388267-4a6c50bb-9e81-403c-b903-86ccab6eadb0.png)
+![corr mae and std dev RBF](https://user-images.githubusercontent.com/62892813/156600120-dcf971cb-ce06-461f-b1f1-899830ac44f8.png)
 
+### Custom RBF Interpolation
+
+Taking into account also the orientation information, and with the uniaxial measures (one-dimensional measures of the magnetic field instead of the three components, allowing a smaller sensor), it is possible to interpolate the magnetic field changing the definition of the radial basis function. 
+
+![diag results](https://user-images.githubusercontent.com/62892813/157286164-9d806e2a-c2cf-4332-afda-797c6aa9cbaa.png)
