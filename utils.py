@@ -24,8 +24,8 @@ def produce_kernel(X, Y, gamma):
 def train_crbfi(x, y, chosen_gamma):
     return np.linalg.solve(produce_kernel(x, x, chosen_gamma), y) # shape = (300, 8), one weight for each training point and for each coil
 
-def grid_evaluation(x_train, y_train, x_val, y_val, chosen_gamma=.0005):
-    W = train_crbfi(x_train, y_train, chosen_gamma)
+def grid_evaluation(high_dim_x, y_train, x_val, y_val, chosen_gamma=.0005):
+    W = train_crbfi(high_dim_x, y_train, chosen_gamma)
     basis_vectors_x_val, basis_vectors_y_val, basis_vectors_z_val = produce_basis_vectors_to_predict(y_val.shape[0]) # each one has got shape = (3, 125)
     high_dim_x_val_x = np.transpose(np.concatenate((x_val, basis_vectors_x_val))) # shape = (125, 6)
     high_dim_x_val_y = np.transpose(np.concatenate((x_val, basis_vectors_y_val))) # shape = (125, 6)
