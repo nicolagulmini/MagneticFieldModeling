@@ -80,7 +80,7 @@ def diag_evaluation(high_dim_x, y_train, x_diag, y_diag, chosen_gamma=.0005):
     nrmse = MSE(diag_predictions.reshape(-1), y_diag.reshape(-1), squared=False) / den * 100
     return diag_predictions, nmae, nrmse
 
-def visualize_diag_pred(diag_pred, stdv=None, title="Magnetic fields components estimation", namefile=None):
+def visualize_diag_pred(diag_pred, y_diag, stdv=None, title="Magnetic fields components estimation", namefile=None):
     diag_predictions_first_coil = np.swapaxes(diag_pred, 0, 2)[0]
     y_diag_first_coil = np.swapaxes(y_diag, 0, 2)[0]
 
