@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error as MAE, mean_squared_error as MSE
+import imageio
 
 def produce_basis_vectors_to_predict(n):
     to_pred_x = np.array([np.ones(shape=(n)), np.zeros(shape=(n)), np.zeros(shape=(n))])
@@ -124,3 +125,9 @@ def visualize_diag_pred(diag_pred, y_diag, stdv=None, title="Magnetic fields com
     if namefile is not None:
         plt.savefig(namefile+".png")
     plt.show()
+    
+def GIF(list_of_filenames, name="movie"):
+    with imageio.get_writer("./" + name + ".gif", mode='I') as writer:      
+        for filename in list_of_filenames:
+            image = imageio.imread(filename)
+            writer.append_data(image)
