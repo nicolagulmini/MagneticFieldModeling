@@ -53,7 +53,7 @@ def grid_evaluation(high_dim_x, y_train, x_val, y_val, chosen_gamma=.0005):
     nrmse = MSE(grid_predictions.reshape(-1), y_val.reshape(-1), squared=False) / den * 100
     return nmae, nrmse
 
-def diag_evaluation(y_train, chosen_gamma=.0005):
+def diag_evaluation(high_dim_x, y_train, x_diag, y_diag, chosen_gamma=.0005):
     basis_vectors_x_diag, basis_vectors_y_diag, basis_vectors_z_diag = produce_basis_vectors_to_predict(y_diag.shape[0]) # each one has got shape = (3, 100)
     high_dim_x_diag_x = np.transpose(np.concatenate((x_diag, basis_vectors_x_diag))) # shape = (100, 6)
     high_dim_x_diag_y = np.transpose(np.concatenate((x_diag, basis_vectors_y_diag))) # shape = (100, 6)
