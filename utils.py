@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import mean_absolute_error as MAE, mean_squared_error as MSE
 
 def produce_basis_vectors_to_predict(n):
     to_pred_x = np.array([np.ones(shape=(n)), np.zeros(shape=(n)), np.zeros(shape=(n))])
