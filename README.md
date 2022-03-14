@@ -51,5 +51,3 @@ Here the results changing the amount of additive noise in the *training* measure
 
 ![gif](https://user-images.githubusercontent.com/62892813/158213444-044702e0-db3d-4ff5-880e-0270f2f42451.gif)
 ![sigma vs err in crbfi (1)](https://user-images.githubusercontent.com/62892813/158215743-e6bdb5b2-754b-484b-85b9-39d53b5eb6b5.png)
-
-![Radial Basis Function Interpolation](https://en.wikipedia.org/wiki/Radial_basis_function_interpolation)
