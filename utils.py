@@ -63,7 +63,7 @@ def diag_evaluation(high_dim_x, y_train, x_diag, y_diag, chosen_gamma=.0005):
 
     diag_kernel = produce_kernel(stack_together_diag, high_dim_x, chosen_gamma)
 
-    diag_predictions = np.matmul(diag_kernel, train_crbfi(y_train, chosen_gamma)) # shape = (300, 8)
+    diag_predictions = np.matmul(diag_kernel, train_crbfi(high_dim_x, y_train, chosen_gamma)) # shape = (300, 8)
 
     diag_predictions_x = diag_predictions[:100] # shape = (100, 8)
     diag_predictions_y = diag_predictions[100:200] # shape = (100, 8)
