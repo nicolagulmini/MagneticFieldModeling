@@ -36,7 +36,9 @@ and then, computing the kernel between the training points vs the validation one
 
 ![movie](https://user-images.githubusercontent.com/62892813/156361455-8c8ca59d-6acb-43d6-ae93-d0b00065e34f.gif)
 
-and the following plots show, respectively, that a small gamma parameter leads to better results in term of validation nmae and nrmse, and, as done for the GP, the correlation between the nMAE and the standard deviation (computed through the [Cholensky decomposition](https://stats.stackexchange.com/questions/330185/how-to-calculate-the-standard-deviation-for-a-gaussian-process)) for each one of the 24-dim points
+and the following plots show, respectively, that a small gamma parameter leads to better results in term of validation nmae and nrmse, and, as done for the GP, the correlation between the nMAE and the standard deviation (computed through the [Cholensky decomposition](https://stats.stackexchange.com/questions/330185/how-to-calculate-the-standard-deviation-for-a-gaussian-process)) for each one of the 24-dim poi![sigma vs err in crbfi (1)](https://user-images.githubusercontent.com/62892813/158215663-10ee9d02-b1a8-4443-b5ff-61f08b4f6961.png)
+nts![sigma vs err in crbfi (1)](https://user-images.githubusercontent.com/62892813/158215743-e6bdb5b2-754b-484b-85b9-39d53b5eb6b5.png)
+
 
 ![errors](https://user-images.githubusercontent.com/62892813/156388267-4a6c50bb-9e81-403c-b903-86ccab6eadb0.png)
 ![corr mae and std dev RBF](https://user-images.githubusercontent.com/62892813/156600120-dcf971cb-ce06-461f-b1f1-899830ac44f8.png)
@@ -51,3 +53,4 @@ Here the results changing the amount of additive noise in the *training* measure
 
 ![gif](https://user-images.githubusercontent.com/62892813/158213444-044702e0-db3d-4ff5-880e-0270f2f42451.gif)
 
+![Uploading sigma vs err in crbfi (1).png…]()
