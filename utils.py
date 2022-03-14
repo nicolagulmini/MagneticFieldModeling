@@ -99,6 +99,7 @@ def visualize_diag_pred(diag_pred, y_diag, stdv=None, title="Magnetic fields com
         axs[0].plot(range(y_diag.shape[0]),  diag_predictions_first_coil[0]-3*stdv[:100], linewidth=.8, color='blue')
         axs[0].fill_between(range(y_diag.shape[0]),  diag_predictions_first_coil[0]-3*stdv[:100], diag_predictions_first_coil[0]+3*stdv[:100], color='blue', alpha=.2)
     axs[0].grid(color='grey', linewidth=.5)
+    axs[0].set_ylim([.7, 1.35])
 
     axs[1].set_title('H_y')
     axs[1].scatter(range(y_diag.shape[0]), y_diag_first_coil[1], color='green', marker='.')
@@ -110,6 +111,7 @@ def visualize_diag_pred(diag_pred, y_diag, stdv=None, title="Magnetic fields com
         axs[1].plot(range(y_diag.shape[0]), diag_predictions_first_coil[1]-3*stdv[100:200], linewidth=.8, color='blue')
         axs[1].fill_between(range(y_diag.shape[0]), diag_predictions_first_coil[1]-3*stdv[100:200], diag_predictions_first_coil[1]+3*stdv[100:200], color='blue', alpha=.2)
     axs[1].grid(color='grey', linewidth=.5)
+    axs[1].set_ylim([-2.0, -.5])
 
     axs[2].set_title('H_z')
     axs[2].scatter(range(y_diag.shape[0]), y_diag_first_coil[2], color='green', marker='.')
@@ -121,6 +123,7 @@ def visualize_diag_pred(diag_pred, y_diag, stdv=None, title="Magnetic fields com
         axs[2].plot(range(y_diag.shape[0]), diag_predictions_first_coil[2]-3*stdv[200:], linewidth=.8, color='blue')
         axs[2].fill_between(range(y_diag.shape[0]), diag_predictions_first_coil[2]-3*stdv[200:], diag_predictions_first_coil[2]+3*stdv[200:], color='blue', alpha=.2)
     axs[2].grid(color='grey', linewidth=.5)
+    axs[2].set_ylim([.0, .9])
 
     if namefile is not None:
         plt.savefig(namefile+".png")
