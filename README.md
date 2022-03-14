@@ -46,3 +46,8 @@ and the following plots show, respectively, that a small gamma parameter leads t
 Taking into account also the orientation information, and with the uniaxial measures (one-dimensional measures of the magnetic field instead of the three components, allowing a smaller sensor), it is possible to interpolate the magnetic field changing the definition of the radial basis function. 
 
 ![diag results](https://user-images.githubusercontent.com/62892813/157286164-9d806e2a-c2cf-4332-afda-797c6aa9cbaa.png)
+
+Here the results changing the amount of additive noise in the *training* measurements:
+
+![gif](https://user-images.githubusercontent.com/62892813/158213444-044702e0-db3d-4ff5-880e-0270f2f42451.gif)
+
