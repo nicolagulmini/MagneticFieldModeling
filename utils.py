@@ -126,6 +126,7 @@ def visualize_diag_pred(diag_pred, y_diag, stdv=None, title="Magnetic fields com
         plt.savefig(namefile+".png")
     if show:
         plt.show()
+    plt.close()
     
 def GIF(list_of_filenames, name="movie"):
     with imageio.get_writer("./" + name + ".gif", mode='I') as writer:      
