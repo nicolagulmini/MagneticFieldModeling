@@ -21,8 +21,8 @@ def produce_kernel(X, Y, gamma):
             matrix[i][j] = compute_kernel(X[i], Y[j], gamma)
     return matrix
 
-def train_crbfi(y, chosen_gamma):
-    return np.linalg.solve(produce_kernel(high_dim_x, high_dim_x, chosen_gamma), y) # shape = (300, 8), one weight for each training point and for each coil
+def train_crbfi(x, y, chosen_gamma):
+    return np.linalg.solve(produce_kernel(x, x, chosen_gamma), y) # shape = (300, 8), one weight for each training point and for each coil
 
 def grid_evaluation(y_train, chosen_gamma=.0005):
     W = train_crbfi(y_train, chosen_gamma)
