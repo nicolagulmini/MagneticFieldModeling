@@ -28,11 +28,9 @@ Fixing the hyperparameter of the kernel, i.e. the length scale, we can obtain a 
 ```Python
 W = np.linalg.solve(sklearn.metrics.pairwise.rbf_kernel(training_positions, gamma=gamma), magnetic_field_measurements)
 ```
-and then, computing the kernel between the training points vs the validation ones, after a matrix multiplication we are able to predict the magnetic field, as shown in the following .gifs (changing the hyperparameter and the SNR of the noise)
+and then, computing the kernel between the training points vs the validation ones, after a matrix multiplication we are able to predict the magnetic field, as shown in the following .gif
 
 ![movie](https://user-images.githubusercontent.com/62892813/156361455-8c8ca59d-6acb-43d6-ae93-d0b00065e34f.gif)
-
-![gif (1)](https://user-images.githubusercontent.com/62892813/158241093-e7cbc749-e9c0-47da-bc55-6714e993285c.gif)
 
 and the following plot shows the correlation between the nMAE and the standard deviation (computed through the [Cholensky decomposition](https://stats.stackexchange.com/questions/330185/how-to-calculate-the-standard-deviation-for-a-gaussian-process)) for each one of the 24-dim points
 
