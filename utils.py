@@ -54,7 +54,7 @@ def grid_evaluation(high_dim_x, y_train, x_val, y_val, chosen_gamma=.0005, alpha
     nrmse = MSE(grid_predictions.reshape(-1), y_val.reshape(-1), squared=False) / den * 100
     return nmae, nrmse
 
-def diag_evaluation(high_dim_x, y_train, x_diag, y_diag, chosen_gamma=.0005):
+def diag_evaluation(high_dim_x, y_train, x_diag, y_diag, chosen_gamma=.0005, alpha=1e-10):
     basis_vectors_x_diag, basis_vectors_y_diag, basis_vectors_z_diag = produce_basis_vectors_to_predict(y_diag.shape[0]) # each one has got shape = (3, 100)
     high_dim_x_diag_x = np.transpose(np.concatenate((x_diag, basis_vectors_x_diag))) # shape = (100, 6)
     high_dim_x_diag_y = np.transpose(np.concatenate((x_diag, basis_vectors_y_diag))) # shape = (100, 6)
@@ -62,7 +62,7 @@ def diag_evaluation(high_dim_x, y_train, x_diag, y_diag, chosen_gamma=.0005):
 
     stack_together_diag = np.concatenate((high_dim_x_diag_x, high_dim_x_diag_y, high_dim_x_diag_z)) # shape = (300, 6)
 
-    diag_kernel = produce_kernel(stack_together_diag, high_dim_x, chosen_gamma)
+    diag_kernel = produce_kernel(stack_together_diag, high_dim_x, chosen_gamma, alpha)
 
     diag_predictions = np.matmul(diag_kernel, train_crbfi(high_dim_x, y_train, chosen_gamma)) # shape = (300, 8)
 
