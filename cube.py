@@ -13,6 +13,7 @@ class rbf_interpolator:
             else:
                 print("Warning: there is no correspondence between the points and the measures.")
         self.gamma = gamma
+        print(self.pointset)
         
     def update_sets(self, new_points, new_measures):
         if not new_points.shape[0] == new_measures.shape[0]:
