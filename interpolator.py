@@ -3,6 +3,8 @@ import numpy as np
 from sklearn.metrics.pairwise import rbf_kernel
 #from sklearn.metrics import mean_absolute_error as MAE, mean_squared_error as MSE
 
+
+
 class cube:
     
     def __init__(self, origin, side_length=4.):
@@ -35,6 +37,8 @@ class cube:
                                                                     self.origin_corner[0], 
                                                                     self.origin_corner[1], 
                                                                     self.origin_corner[2]) 
+    
+     
 
 class rbf_interpolator:
     
@@ -42,6 +46,12 @@ class rbf_interpolator:
         self.pointset = pointset
         self.measures = measures
         self.gamma = gamma
+        
+    def update_sets(self, new_points, new_measures):
+        self.pointset = np.insert(self.pointset, 0, new_points, axis=0)
+        self.measures = np.insert(self.measures, 0, new_measures, axis=0)
+        
+    def compute_weights(self):
         self.k = rbf_kernel(self.pointset, gamma=self.gamma)
         self.weights = np.linalg.solve(self.k, self.measures)
     
