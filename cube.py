@@ -4,6 +4,8 @@ from sklearn.metrics.pairwise import rbf_kernel
 class rbf_interpolator:
     
     def __init__(self, pointset=None, measures=None, gamma=.0005):
+        self.pointset = pointset
+        self.measures = measures
         if pointset is not None:
             if pointset.shape[0] == measures.shape[0]:
                 self.pointset = pointset
