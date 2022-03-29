@@ -18,6 +18,7 @@ class rbf_interpolator:
         if not new_points.shape[0] == new_measures.shape[0]:
             print("Error: points and measures must correspond! Return.")
             return
+        print(self.pointset)
         if self.pointset is None: # if pointset is None also measures must be None
             self.pointset = new_points
             self.measures = new_measures
