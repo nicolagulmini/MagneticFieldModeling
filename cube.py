@@ -51,6 +51,7 @@ class cube:
         self.interpolator = rbf_interpolator()
     
     def set_points(self, points, measures):
+        print(self.interpolator)
         self.interpolator.update_sets(points, measures)
         
     def interpolate(self):
