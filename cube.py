@@ -48,7 +48,7 @@ class cube:
         self.origin_corner = origin # numpy vector for position [x, y, z]
         # for the opposite corner, for example, it is sufficient to do self.origin_corner + self.side_length * numpy.ones(3)
         self.side_length = side_length # in centimeters
-        self.interpolator = rbf_interpolator()
+        self.interpolator = rbf_interpolator.rbf_interpolator()
     
     def set_points(self, points, measures):
         print(self.interpolator)
