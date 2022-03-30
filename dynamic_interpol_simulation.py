@@ -9,7 +9,6 @@ namefile = 'random_cloud.csv'
 
 grid = np.transpose(loadmat('./MagneticFieldModeling/simulated_data/fluxes_biot_5_cube5cm.mat')['PP_test_grd'])
 
-
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 zline = grid.T[2]
@@ -20,6 +19,7 @@ ax.set_ylabel("y (mm)")
 ax.set_zlabel("z (mm)")
 
 cube = cube.cube(origin=np.array([-2., -2., 10.5])) # qua lo ridefinisco ogni volta
+
 
 def animate(k):
     data = pd.read_csv(namefile)
@@ -41,7 +41,6 @@ def animate(k):
                          alpha = .05/i,
                          c = color_vec)
 
-ani = FuncAnimation(plt.gcf(), animate, interval=1000)
+ani = FuncAnimation(plt.gcf(), animate, interval=100)
 plt.tight_layout()
-
-ani.save('animation.gif')
+#ani.save('es') # understand how to save the animation

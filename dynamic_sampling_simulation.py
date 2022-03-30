@@ -28,4 +28,4 @@ with open(namefile, 'a') as csv_file:
         if i == random_cloud.shape[0]-1:
             csv_file.close()
             break
-        time.sleep(.5)
+        time.sleep(1)
