@@ -25,7 +25,7 @@ with open(namefile, 'a') as csv_file:
         towrite = np.concatenate((random_cloud[i].flatten(), fluxes_biot_rnd[i].flatten()), axis=0)
         csv_writer.writerow({headers[j]: towrite[j] for j in range(towrite.shape[0])})
         i += 1
-        if i == random_cloud.shape[0]-1:
+        if i == random_cloud.shape[0]:
             csv_file.close()
             break
         time.sleep(1)
