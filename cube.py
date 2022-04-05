@@ -15,6 +15,12 @@ class rbf_interpolator:
         self.gamma = gamma
         self.sigma = sigma
         
+    def set_gamma(self, gamma):
+        self.gamma = gamma
+        
+    def set_sigma(self, sigma):
+        self.sigma = sigma
+        
     def update_sets(self, new_points, new_measures):
         if not new_points.shape[0] == new_measures.shape[0]:
             print("Error: points and measures must correspond! Return.")

@@ -3,11 +3,16 @@ from scipy.io import loadmat
 from matplotlib.animation import FuncAnimation
 import numpy as np
 import cube
-from queue import Queue
+#from queue import Queue
+from scipy import interpolate
 
-EPSILON = 5 # mm of tolerance
+EPSILON = 5 # mm of tolerance for the visualization of the cube
+AMOUNT_OF_NEW_POINTS = 10
+NUMBER_OF_PAST_POINTS_TO_VIS = AMOUNT_OF_NEW_POINTS # if >= amount_of_new_points then number_of_past_points_to_visualize = amount_of_new_points
+GAMMA = .0005
+SIGMA = (2.5e-3)**2
 
-# reading one point at time directly from the matrix
+# reading AMOUNT_OF_NEW_POINTS points at time directly from the matrix
 # also, there is some noise
 
 grid = np.transpose(loadmat('./MagneticFieldModeling/simulated_data/fluxes_biot_5_cube5cm.mat')['PP_test_grd'])
@@ -18,6 +23,7 @@ measures = np.reshape(measures, (measures.shape[0], measures.shape[2]))
 orientations = uniaxial_mat['n_test_rnd']
 high_dim_x = np.transpose(np.concatenate((positions, orientations)))
 
+# for visualization
 plt.close('all')
 fig = plt.figure()
 ax = plt.axes(projection='3d')
@@ -25,17 +31,18 @@ zline = grid.T[2]
 yline = grid.T[1]
 xline = grid.T[0]
 
+# define the cube
 cube = cube.cube(origin=np.array([-2., -2., 10.5]), uniaxial=True)
+cube.interpolator.set_sigma(SIGMA)
+cube.interpolator.set_gamma(GAMMA)
 
 COUNTER = 0
-amount_of_new_points = 10
-number_of_past_points_to_visualize = 10 # if >= amount_of_new_points then number_of_past_points_to_visualize = amount_of_new_points
 # maybe in the dynamic scenario a queue would be a more suitable structure to record the sensor's past positions to visualize
 
 def animate(k):
     global COUNTER
     global queue_for_position_visualization
-    if COUNTER <= 124-124%amount_of_new_points:
+    if COUNTER <= 124-124%AMOUNT_OF_NEW_POINTS:
         plt.cla()
         
         ax.set_title("\nx component (sampled points = %i)"%(COUNTER))
@@ -46,8 +53,8 @@ def animate(k):
         ax.set_ylim(10*cube.origin_corner[1]-EPSILON, 10*(cube.origin_corner[1]+cube.side_length)+EPSILON)
         ax.set_zlim(10*cube.origin_corner[2]-EPSILON, 10*(cube.origin_corner[2]+cube.side_length)+EPSILON)
         
-        new_points = high_dim_x[COUNTER:COUNTER+amount_of_new_points]
-        new_measures = measures[COUNTER:COUNTER+amount_of_new_points]
+        new_points = high_dim_x[COUNTER:COUNTER+AMOUNT_OF_NEW_POINTS]
+        new_measures = measures[COUNTER:COUNTER+AMOUNT_OF_NEW_POINTS]
         cube.add_points(new_points, new_measures)
         cube.interpolate()
         unc = cube.uncertainty_cloud(grid)
@@ -74,14 +81,17 @@ def animate(k):
                          c = color_vec_x)
             
         # also the visualization for the uniaxial is different
-        print(new_points)
-        pos_sensor = np.flip(new_points, 0)[:number_of_past_points_to_visualize, :3]
-        print(pos_sensor)
-        or_sensor = np.flip(new_points, 0)[:number_of_past_points_to_visualize, 3:]
+        pos_sensor = np.flip(new_points, 0)[:NUMBER_OF_PAST_POINTS_TO_VIS, :3]
+        or_sensor = np.flip(new_points, 0)[:NUMBER_OF_PAST_POINTS_TO_VIS, 3:]
         ax.scatter(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], s=20, color='blue')
-        ax.plot(pos_sensor.T[0], pos_sensor.T[1], pos_sensor.T[2], alpha=.3, color='blue')
+        
+        tck, u = interpolate.splprep([pos_sensor.T[0], pos_sensor.T[1], pos_sensor.T[2]], s=2)
+        u_fine = np.linspace(0, 1, 100)
+        x_fine, y_fine, z_fine = interpolate.splev(u_fine, tck)
+        
+        ax.plot(x_fine, y_fine, z_fine, alpha=.3, color='blue')
         ax.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
-        COUNTER += amount_of_new_points
+        COUNTER += AMOUNT_OF_NEW_POINTS
         
 ani = FuncAnimation(plt.gcf(), animate, interval=300)
 plt.tight_layout()
