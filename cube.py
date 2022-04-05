@@ -56,11 +56,7 @@ class uniaxial_rbf_interpolator(rbf_interpolator):
         return np.dot(or_1, or_2) * np.exp(-self.gamma*(np.linalg.norm(pos_1-pos_2)**2))
     
     def produce_kernel(self, X, Y):
-        matrix = np.zeros(shape=(X.shape[0], Y.shape[0]))
-        for i in range(X.shape[0]):
-            for j in range(Y.shape[0]):
-                matrix[i][j] = self.compute_kernel(X[i], Y[j])
-        return matrix
+        return rbf_kernel(X[:, :3], Y[:, :3], gamma=self.gamma) * np.tensordot(X[:, 3:], Y[:, 3:], axes=(1, 1))
         
     def compute_weights(self):
         self.k = self.sigma*np.eye(self.pointset.shape[0])+self.produce_kernel(self.pointset, self.pointset)
@@ -155,23 +151,27 @@ class cube:
                                                                     self.origin_corner[1], 
                                                                     self.origin_corner[2]) 
 
-'''
 class multicube:
     
     def __init__(self):
         self.current_position = np.zeros(3)
-        self.current_cube = cube(origin=self.current_position)
+        self.current_cube = cube(origin=np.zeros(3))
         self.cubes = [self.current_cube]
+        self.list_of_unlabeled_points = []
         
-    def move_sensor(self, new_position):
+    def move_sensor(self, new_position, new_measure) -> cube:
+        # add to 
         if self.current_cube.is_inside(new_position): 
-            return self.current_cube
+            self.current_cube.add_points(new_position[np.newaxis], new_measure[np.newaxis])
+            return self.current_cube # to return faster
         for cube in self.cubes:
             if cube.is_inside(new_position):
                 self.current_cube = cube
                 return self.current_cube
+        self.list_of_unlabeled_points.append([new_position, new_measure])
+        return self.current_cube
+    
+    def change_cube(self):
         # define a new cube
-        new_cube = cube(origin=np.zeros(3)) # wrong: the new cube must have origin = opposite corner of another cube, and it must contain the new point
-        self.current_cube = new_cube
-        self.cubes.append(self.current_cube)
-'''
+        # add the points that were unlabeled
+        return None
