@@ -28,15 +28,17 @@ xline = grid.T[0]
 cube = cube.cube(origin=np.array([-2., -2., 10.5]), uniaxial=True)
 
 COUNTER = 0
-queue_for_position_visualization = Queue(maxsize = 3)
+amount_of_new_points = 10
+number_of_past_points_to_visualize = 10 # if >= amount_of_new_points then number_of_past_points_to_visualize = amount_of_new_points
+# maybe in the dynamic scenario a queue would be a more suitable structure to record the sensor's past positions to visualize
 
 def animate(k):
     global COUNTER
     global queue_for_position_visualization
-    if COUNTER <= 124:
+    if COUNTER <= 124-124%amount_of_new_points:
         plt.cla()
         
-        ax.set_title("x component")
+        ax.set_title("\nx component (sampled points = %i)"%(COUNTER))
         ax.set_xlabel("x (mm)")
         ax.set_ylabel("y (mm)")
         ax.set_zlabel("z (mm)")
@@ -44,7 +46,9 @@ def animate(k):
         ax.set_ylim(10*cube.origin_corner[1]-EPSILON, 10*(cube.origin_corner[1]+cube.side_length)+EPSILON)
         ax.set_zlim(10*cube.origin_corner[2]-EPSILON, 10*(cube.origin_corner[2]+cube.side_length)+EPSILON)
         
-        cube.add_points(np.array([high_dim_x[COUNTER]]), np.array([measures[COUNTER]]))
+        new_points = high_dim_x[COUNTER:COUNTER+amount_of_new_points]
+        new_measures = measures[COUNTER:COUNTER+amount_of_new_points]
+        cube.add_points(new_points, new_measures)
         cube.interpolate()
         unc = cube.uncertainty_cloud(grid)
         
@@ -69,16 +73,15 @@ def animate(k):
                          alpha = .05/i,
                          c = color_vec_x)
             
-        if queue_for_position_visualization.full():
-            queue_for_position_visualization.get()
         # also the visualization for the uniaxial is different
-        pos_sensor = high_dim_x[COUNTER][:3]
-        or_sensor = high_dim_x[COUNTER][3:]
-        queue_for_position_visualization.put(pos_sensor)
-        ax.scatter(pos_sensor[0], pos_sensor[1], pos_sensor[2], s=20, color='blue')
-        ax.plot([el[0] for el in queue_for_position_visualization.queue], [el[1] for el in queue_for_position_visualization.queue], [el[2] for el in queue_for_position_visualization.queue], alpha=.3, color='blue')
-        ax.quiver(pos_sensor[0], pos_sensor[1], pos_sensor[2], 7*or_sensor[0], 7*or_sensor[1], 7*or_sensor[2], color='blue')
-        COUNTER += 1
+        print(new_points)
+        pos_sensor = np.flip(new_points, 0)[:number_of_past_points_to_visualize, :3]
+        print(pos_sensor)
+        or_sensor = np.flip(new_points, 0)[:number_of_past_points_to_visualize, 3:]
+        ax.scatter(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], s=20, color='blue')
+        ax.plot(pos_sensor.T[0], pos_sensor.T[1], pos_sensor.T[2], alpha=.3, color='blue')
+        ax.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
+        COUNTER += amount_of_new_points
         
-ani = FuncAnimation(plt.gcf(), animate, interval=1500)
+ani = FuncAnimation(plt.gcf(), animate, interval=300)
 plt.tight_layout()

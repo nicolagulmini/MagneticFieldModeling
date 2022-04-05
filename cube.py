@@ -47,13 +47,6 @@ class uniaxial_rbf_interpolator(rbf_interpolator):
     def __init__(self, pointset=None, measures=None, gamma=.0005, sigma=1e-10):
         super().__init__(pointset=pointset, measures=measures, gamma=gamma, sigma=sigma)
         # but now the points of the pointset are 6-dim, and the measures are 1-dim
-        
-    def compute_kernel(self, high_dim_x1, high_dim_x2):
-        pos_1 = high_dim_x1[:3]
-        pos_2 = high_dim_x2[:3]
-        or_1 = high_dim_x1[3:]
-        or_2 = high_dim_x2[3:]
-        return np.dot(or_1, or_2) * np.exp(-self.gamma*(np.linalg.norm(pos_1-pos_2)**2))
     
     def produce_kernel(self, X, Y):
         return rbf_kernel(X[:, :3], Y[:, :3], gamma=self.gamma) * np.tensordot(X[:, 3:], Y[:, 3:], axes=(1, 1))
