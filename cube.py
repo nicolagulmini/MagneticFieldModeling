@@ -2,27 +2,22 @@ import numpy as np
 from sklearn.metrics.pairwise import rbf_kernel
 
 class rbf_interpolator:
-    # da sistemare!
     def __init__(self, points=None, measures=None, gamma=.0005, sigma=1e-10):
-        self.pointset = np.array([])
-        self.measures = np.array([])
-        self.points_without_measures = np.array([])
-        if points is not None:
-            if measures is None:
-                self.points_without_measures = points
-            elif points.shape[0] == measures.shape[0]:
-                self.pointset = points
-                self.measures = measures
-            else:
-                print("Warning: there is no correspondence on the given points.")
+        self.pointset = points
+        self.measures = measures
+        if points is None:
+            self.pointset = np.array([])
+        if measures is None:
+            self.pointset = np.array([])
         self.gamma = gamma
         self.sigma = sigma
+        self.k = np.array([])
         
     def update_points(self, new_points):
-        if self.points_without_measures.shape[0] == 0:
-            self.points_without_measures = new_points
+        if self.pointset.shape[0] == 0:
+            self.pointset = new_points
         else:
-            self.points_without_measures = np.insert(self.points_without_measures, 0, new_points, axis=0)
+            self.pointset = np.insert(self.pointset, 0, new_points, axis=0)
         
     def update(self, new_points, new_measures=None):
         if new_measures is None:
@@ -38,7 +33,7 @@ class rbf_interpolator:
             self.pointset = np.insert(self.pointset, 0, new_points, axis=0)
             self.measures = np.insert(self.measures, 0, new_measures, axis=0)
         
-    def set_kernel(self):
+    def set_kernel(self, points=True):
         self.k = self.sigma*np.eye(self.pointset.shape[0])+rbf_kernel(self.pointset, gamma=self.gamma)
         
     def set_weights(self):
@@ -100,6 +95,15 @@ class uniaxial_rbf_interpolator(rbf_interpolator):
         stdv = self.uncertainty(stack_together, pred_kernel)
             
         return to_return, stdv
+    
+    def uncertainty(self, points, pred_kernel=None):
+        if pred_kernel is None:
+            pred_kernel = self.produce_kernel(points, self.pointset)
+        self.set_kernel()
+        L = np.linalg.cholesky(self.k)
+        Lk = np.linalg.solve(L, np.transpose(pred_kernel))
+        stdv = np.sqrt(np.diag(rbf_kernel(points, gamma=self.gamma))-np.sum(Lk**2, axis=0))
+        return stdv
        
     @staticmethod
     def produce_basis_vectors_for_prediction(n):
@@ -107,7 +111,7 @@ class uniaxial_rbf_interpolator(rbf_interpolator):
         to_pred_y = np.array([np.zeros(shape=(n)), np.ones(shape=(n)), np.zeros(shape=(n))])
         to_pred_z = np.array([np.zeros(shape=(n)), np.zeros(shape=(n)), np.ones(shape=(n))])
         return to_pred_x, to_pred_y, to_pred_z
-
+    
 class cube:
     
     def __init__(self, origin, side_length=40., uniaxial=False):
@@ -152,7 +156,8 @@ class cube:
         points = self.grid
         if isinstance(self.interpolator, uniaxial_rbf_interpolator):
             points = self.stack_grid
-        return self.interpolator.uncertainty(points)
+        to_ret = self.interpolator.uncertainty(points)
+        return to_ret
         
     def corners(self):
         return [self.origin_corner, 
@@ -180,27 +185,3 @@ class cube:
                                                                     self.origin_corner[1], 
                                                                     self.origin_corner[2]) 
 
-class multicube:
-    
-    def __init__(self):
-        self.current_position = np.zeros(3)
-        self.current_cube = cube(origin=np.zeros(3))
-        self.cubes = [self.current_cube]
-        self.list_of_unlabeled_points = []
-        
-    def move_sensor(self, new_position, new_measure) -> cube:
-        # add to 
-        if self.current_cube.is_inside(new_position): 
-            self.current_cube.add_points(new_position[np.newaxis], new_measure[np.newaxis])
-            return self.current_cube # to return faster
-        for cube in self.cubes:
-            if cube.is_inside(new_position):
-                self.current_cube = cube
-                return self.current_cube
-        self.list_of_unlabeled_points.append([new_position, new_measure])
-        return self.current_cube
-    
-    def change_cube(self):
-        # define a new cube
-        # add the points that were unlabeled
-        return None
