@@ -2,26 +2,32 @@ import numpy as np
 from sklearn.metrics.pairwise import rbf_kernel
 
 class rbf_interpolator:
-    
-    def __init__(self, pointset=None, measures=None, gamma=.0005, sigma=1e-10):
+    # da sistemare!
+    def __init__(self, points=None, measures=None, gamma=.0005, sigma=1e-10):
         self.pointset = np.array([])
         self.measures = np.array([])
-        if pointset is not None:
-            if pointset.shape[0] == measures.shape[0]:
-                self.pointset = pointset
+        self.points_without_measures = np.array([])
+        if points is not None:
+            if measures is None:
+                self.points_without_measures = points
+            elif points.shape[0] == measures.shape[0]:
+                self.pointset = points
                 self.measures = measures
             else:
-                print("Warning: there is no correspondence between the points and the measures.")
+                print("Warning: there is no correspondence on the given points.")
         self.gamma = gamma
         self.sigma = sigma
         
-    def set_gamma(self, gamma):
-        self.gamma = gamma
+    def update_points(self, new_points):
+        if self.points_without_measures.shape[0] == 0:
+            self.points_without_measures = new_points
+        else:
+            self.points_without_measures = np.insert(self.points_without_measures, 0, new_points, axis=0)
         
-    def set_sigma(self, sigma):
-        self.sigma = sigma
-        
-    def update_sets(self, new_points, new_measures):
+    def update(self, new_points, new_measures=None):
+        if new_measures is None:
+            self.update_points(new_points)
+            return
         if not new_points.shape[0] == new_measures.shape[0]:
             print("Error: points and measures must correspond! Return.")
             return
@@ -32,8 +38,10 @@ class rbf_interpolator:
             self.pointset = np.insert(self.pointset, 0, new_points, axis=0)
             self.measures = np.insert(self.measures, 0, new_measures, axis=0)
         
-    def compute_weights(self):
+    def set_kernel(self):
         self.k = self.sigma*np.eye(self.pointset.shape[0])+rbf_kernel(self.pointset, gamma=self.gamma)
+        
+    def set_weights(self):
         self.weights = np.linalg.solve(self.k, self.measures)
     
     def predict(self, points, uncertainty=False):
@@ -43,24 +51,32 @@ class rbf_interpolator:
         to_return = np.matmul(pred_kernel, self.weights)
         if uncertainty is False:
             return to_return
+        stdv = self.uncertainty(points, pred_kernel)
+        return to_return, stdv
+    
+    def predict_with_uncertainty(self, points):
+        return self.predict(points, uncertainty=True)
+    
+    def uncertainty(self, points, pred_kernel=None):
+        if pred_kernel is None:
+            pred_kernel = rbf_kernel(points, self.pointset, self.gamma)
         L = np.linalg.cholesky(self.k)
         Lk = np.linalg.solve(L, np.transpose(pred_kernel))
         stdv = np.sqrt(np.diag(rbf_kernel(points, gamma=self.gamma))-np.sum(Lk**2, axis=0))
-        return to_return, stdv
+        return stdv
     
 class uniaxial_rbf_interpolator(rbf_interpolator):
     
-    def __init__(self, pointset=None, measures=None, gamma=.0005, sigma=1e-10):
-        super().__init__(pointset=pointset, measures=measures, gamma=gamma, sigma=sigma)
+    def __init__(self, points=None, measures=None, gamma=.0005, sigma=1e-10):
+        super().__init__(points=points, measures=measures, gamma=gamma, sigma=sigma)
         # but now the points of the pointset are 6-dim, and the measures are 1-dim
     
     def produce_kernel(self, X, Y):
         return rbf_kernel(X[:, :3], Y[:, :3], gamma=self.gamma) * np.tensordot(X[:, 3:], Y[:, 3:], axes=(1, 1))
-        
-    def compute_weights(self):
+    
+    def set_kernel(self):
         self.k = self.sigma*np.eye(self.pointset.shape[0])+self.produce_kernel(self.pointset, self.pointset)
-        self.weights = np.linalg.solve(self.k, self.measures)
-            
+                    
     def predict(self, points, uncertainty=False):
         basis_vectors_x, basis_vectors_y, basis_vectors_z = uniaxial_rbf_interpolator.produce_basis_vectors_for_prediction(points.shape[0])
         high_dim_x = np.transpose(np.concatenate((np.transpose(points), basis_vectors_x)))
@@ -69,9 +85,8 @@ class uniaxial_rbf_interpolator(rbf_interpolator):
         stack_together = np.concatenate((high_dim_x, high_dim_y, high_dim_z)) 
         
         pred_kernel = self.produce_kernel(stack_together, self.pointset)
-
-        if not pred_kernel.shape[1] == self.weights.shape[0]:
-            self.compute_weights()
+        self.set_kernel()
+        self.compute_weights()
             
         mul = np.matmul(pred_kernel, self.weights)
         dims = int(mul.shape[0]/3)
@@ -80,15 +95,12 @@ class uniaxial_rbf_interpolator(rbf_interpolator):
         predictions_z = np.reshape(mul[int(2*dims):], (dims, 1, 8))
         
         to_return = np.concatenate((predictions_x, predictions_y, predictions_z), axis=1)
-        if uncertainty is False:
-            return to_return
         
-        # uncertainty computation for all the components
-        L = np.linalg.cholesky(self.k)
-        Lk = np.linalg.solve(L, np.transpose(pred_kernel))
-        stdv = np.sqrt(np.diag(self.produce_kernel(stack_together, stack_together))-np.sum(Lk**2, axis=0))
+        # uncertainty computation for all the components giving stack_together instead of points
+        stdv = self.uncertainty(stack_together, pred_kernel)
+            
         return to_return, stdv
-    
+       
     @staticmethod
     def produce_basis_vectors_for_prediction(n):
         to_pred_x = np.array([np.ones(shape=(n)), np.zeros(shape=(n)), np.zeros(shape=(n))])
@@ -98,32 +110,50 @@ class uniaxial_rbf_interpolator(rbf_interpolator):
 
 class cube:
     
-    def __init__(self, origin, side_length=4., uniaxial=False):
+    def __init__(self, origin, side_length=40., uniaxial=False):
         self.origin_corner = origin # numpy vector for position [x, y, z]
         # for the opposite corner, for example, it is sufficient to do self.origin_corner + self.side_length * numpy.ones(3)
         self.side_length = side_length # in centimeters
-        if not uniaxial:
-            self.interpolator = rbf_interpolator()
         if uniaxial:
             self.interpolator = uniaxial_rbf_interpolator()
-        
-    def set_points(self, points, measures):
-        if points.shape[0] == measures.shape[0]:
-            self.interpolator.pointset = points
-            self.interpolator.measures = measures
         else:
-            print("Error: points and measures must correspond! Return.")
-            return
-    
-    def add_points(self, points, measures):
-        self.interpolator.update_sets(points, measures)
+            self.interpolator = rbf_interpolator()
+            
+    def set_grid(self, point_density=10.): 
+        # point density means that every 1 centimeter there is a point of the grid
+        x = np.linspace(self.origin_corner[0], self.origin_corner[0]+self.side_length, int(self.side_length/point_density)+1) # i think
+        y = np.linspace(self.origin_corner[1], self.origin_corner[1]+self.side_length, 5)
+        z = np.linspace(self.origin_corner[2], self.origin_corner[2]+self.side_length, 5)
+
+        # is there a better method to do so?
+        grid = np.zeros((int(x.shape[0]*y.shape[0]*z.shape[0]), 3))
+        c = 0
+        for i in z:
+            for j in y:
+                for k in x:
+                    grid[c] = np.array([k, j, i])
+                    c += 1
+        self.grid = grid
         
+        if isinstance(self.interpolator, uniaxial_rbf_interpolator):
+            basis_vectors_x, basis_vectors_y, basis_vectors_z = uniaxial_rbf_interpolator.produce_basis_vectors_for_prediction(self.grid.shape[0])
+            high_dim_x = np.transpose(np.concatenate((np.transpose(self.grid), basis_vectors_x)))
+            high_dim_y = np.transpose(np.concatenate((np.transpose(self.grid), basis_vectors_y)))
+            high_dim_z = np.transpose(np.concatenate((np.transpose(self.grid), basis_vectors_z)))
+            self.stack_grid = np.concatenate((high_dim_x, high_dim_y, high_dim_z)) 
+        
+    def update(self, points, measures=None):
+        self.interpolator.update(points, measures)
+            
     def interpolate(self):
-        self.interpolator.compute_weights()
+        self.interpolator.set_weights()
         
-    def uncertainty_cloud(self, grid_points):
-        return self.interpolator.predict(grid_points, uncertainty=True)[1]
-    
+    def uncertainty_cloud(self):
+        points = self.grid
+        if isinstance(self.interpolator, uniaxial_rbf_interpolator):
+            points = self.stack_grid
+        return self.interpolator.uncertainty(points)
+        
     def corners(self):
         return [self.origin_corner, 
                 self.origin_corner + self.side_length * np.array([0., 0., 1.]),
