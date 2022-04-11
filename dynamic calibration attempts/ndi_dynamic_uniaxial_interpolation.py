@@ -19,6 +19,7 @@ class uniaxial_to_calib:
         self.gamma = gamma
         self.sigma = sigma
         self.points = np.array([])
+        self.k = None
         
     def update_points(self, new_points):
         if self.points.shape[0] == 0:
@@ -33,11 +34,17 @@ class uniaxial_to_calib:
         self.k = self.sigma*np.eye(self.points.shape[0])+self.produce_kernel(self.points, self.points)
         
     def update_kernel(self, new_points):
-        self.k = self.k - self.sigma*np.eye(self.points.shape[0])
+        if self.k is None:
+            self.update_points(new_points)
+            self.set_kernel()
+            return
+        self.k = self.k - self.sigma*np.eye(self.k.shape[0])
         self.update_points(new_points)
         K_ = self.produce_kernel(new_points, self.points)
-        self.k = np.r_[self.k, K_[:, :new_points.shape[0]+1]]
-        self.k = np.c_[self.k, K_.T] + self.sigma*np.eye(self.points.shape[0])
+        print(self.k.shape, K_.shape, K_[:, :self.k.shape[0]].shape)
+        self.k = np.r_[self.k, K_[:, :self.k.shape[0]]]
+        self.k = np.c_[self.k, K_.T] 
+        self.k = self.k + self.sigma*np.eye(self.k.shape[0])
         
     def uncertainty(self, stack_grid):
         pred_kernel = self.produce_kernel(stack_grid, self.points)
@@ -185,4 +192,4 @@ def uniaxial_dynamic_cal(client, EPSILON=1, AMOUNT_OF_NEW_POINTS=10, NUMBER_OF_P
     plt.tight_layout()
     
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
-uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=100)
+uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=10)
