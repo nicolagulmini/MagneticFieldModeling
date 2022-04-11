@@ -32,8 +32,14 @@ class uniaxial_to_calib:
     def set_kernel(self):
         self.k = self.sigma*np.eye(self.points.shape[0])+self.produce_kernel(self.points, self.points)
         
+    def update_kernel(self, new_points):
+        self.k = self.k - self.sigma*np.eye(self.points.shape[0])
+        self.update_points(new_points)
+        K_ = self.produce_kernel(new_points, self.points)
+        self.k = np.r_[self.k, K_[:, :new_points.shape[0]+1]]
+        self.k = np.c_[self.k, K_.T] + self.sigma*np.eye(self.points.shape[0])
+        
     def uncertainty(self, stack_grid):
-        self.set_kernel()
         pred_kernel = self.produce_kernel(stack_grid, self.points)
         L = np.linalg.cholesky(self.k)
         Lk = np.linalg.solve(L, np.transpose(pred_kernel))
@@ -69,7 +75,7 @@ class cube_to_calib:
         self.stack_grid = np.concatenate((high_dim_x, high_dim_y, high_dim_z)) 
     
     def update_uncert_vis(self, new_points):
-        self.interpolator.update_points(new_points)
+        self.interpolator.update_kernel(new_points)
         return self.interpolator.uncertainty(self.stack_grid)
 
 def uniaxial_dynamic_cal(client, EPSILON=1, AMOUNT_OF_NEW_POINTS=10, NUMBER_OF_PAST_POINTS_TO_VIS=10, GAMMA=.0005, SIGMA=(2.5e-3)**2, interval=300):
