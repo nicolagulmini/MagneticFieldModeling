@@ -126,26 +126,26 @@ def uniaxial_dynamic_cal(client, EPSILON=1, AMOUNT_OF_NEW_POINTS=10, NUMBER_OF_P
             az.clear()
             
             # and everytime it is necessary to reset the settings of the plot
-            ax.set_title("\nx component")#" (sampled points = %i)"%(COUNTER))
-            ax.set_xlabel("x (mm)")
-            ax.set_ylabel("y (mm)")
-            ax.set_zlabel("z (mm)")
+            #ax.set_title("\nx component")#" (sampled points = %i)"%(COUNTER))
+            #ax.set_xlabel("x (mm)")
+            #ax.set_ylabel("y (mm)")
+            #ax.set_zlabel("z (mm)")
             ax.set_xlim(cube.origin_corner[0]-EPSILON, cube.origin_corner[0]+cube.side_length+EPSILON)
             ax.set_ylim(cube.origin_corner[1]-EPSILON, cube.origin_corner[1]+cube.side_length+EPSILON)
             ax.set_zlim(cube.origin_corner[2]-EPSILON, cube.origin_corner[2]+cube.side_length+EPSILON)
             
-            ay.set_title("\ny component")#" (sampled points = %i)"%(COUNTER))
-            ay.set_xlabel("x (mm)")
-            ay.set_ylabel("y (mm)")
-            ay.set_zlabel("z (mm)")
+            #ay.set_title("\ny component")#" (sampled points = %i)"%(COUNTER))
+            #ay.set_xlabel("x (mm)")
+            #ay.set_ylabel("y (mm)")
+            #ay.set_zlabel("z (mm)")
             ay.set_xlim(cube.origin_corner[0]-EPSILON, cube.origin_corner[0]+cube.side_length+EPSILON)
             ay.set_ylim(cube.origin_corner[1]-EPSILON, cube.origin_corner[1]+cube.side_length+EPSILON)
             ay.set_zlim(cube.origin_corner[2]-EPSILON, cube.origin_corner[2]+cube.side_length+EPSILON)
             
-            az.set_title("\nz component")#" (sampled points = %i)"%(COUNTER))
-            az.set_xlabel("x (mm)")
-            az.set_ylabel("y (mm)")
-            az.set_zlabel("z (mm)")
+            #az.set_title("\nz component")#" (sampled points = %i)"%(COUNTER))
+            #az.set_xlabel("x (mm)")
+            #az.set_ylabel("y (mm)")
+            #az.set_zlabel("z (mm)")
             az.set_xlim(cube.origin_corner[0]-EPSILON, cube.origin_corner[0]+cube.side_length+EPSILON)
             az.set_ylim(cube.origin_corner[1]-EPSILON, cube.origin_corner[1]+cube.side_length+EPSILON)
             az.set_zlim(cube.origin_corner[2]-EPSILON, cube.origin_corner[2]+cube.side_length+EPSILON)
@@ -164,7 +164,7 @@ def uniaxial_dynamic_cal(client, EPSILON=1, AMOUNT_OF_NEW_POINTS=10, NUMBER_OF_P
             color_vec_y = np.concatenate((unc_y_, 1-unc_y_, np.zeros(unc_y_.shape)), axis=0).T
             color_vec_z = np.concatenate((unc_z_, 1-unc_x_, np.zeros(unc_z_.shape)), axis=0).T
         
-            for i in np.arange(.1, 1., .1):
+            for i in np.arange(.1, 1., .2):
                 ax.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_x_)**2, alpha = .05/i, c = color_vec_x)
                 ay.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_x_)**2, alpha = .05/i, c = color_vec_y)
                 az.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_x_)**2, alpha = .05/i, c = color_vec_z)
@@ -172,19 +172,22 @@ def uniaxial_dynamic_cal(client, EPSILON=1, AMOUNT_OF_NEW_POINTS=10, NUMBER_OF_P
             # probabilmente va sistemata anche questa cosa in modo da poter visualizzare più punti di quelli raccolti con l'ultimo aggiornamento, quindi forse sarà necessario definire una seconda coda, apposita
             pos_sensor = np.flip(new_points, 0)[:, :3]
             or_sensor = np.flip(new_points, 0)[:, 3:]
-            ax.scatter(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], s=20, color='blue')
-            ay.scatter(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], s=20, color='blue')
-            az.scatter(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], s=20, color='blue')
+            #ax.scatter(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], s=20, color='blue')
+            #ay.scatter(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], s=20, color='blue')
+            #az.scatter(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], s=20, color='blue')
 
             #tck, u = interpolate.splprep([pos_sensor.T[0], pos_sensor.T[1], pos_sensor.T[2]], s=2)
             #u_fine = np.linspace(0, 1, 100)
             #x_fine, y_fine, z_fine = interpolate.splev(u_fine, tck)
             
             #ax.plot(x_fine, y_fine, z_fine, alpha=.3, color='blue')
+            #ax.plot(pos_sensor.T[0], pos_sensor.T[1], pos_sensor.T[2], alpha=.3, color='blue')
             ax.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
             #ay.plot(x_fine, y_fine, z_fine, alpha=.3, color='blue')
+            #ay.plot(pos_sensor.T[0], pos_sensor.T[1], pos_sensor.T[2], alpha=.3, color='blue')
             ay.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
             #az.plot(x_fine, y_fine, z_fine, alpha=.3, color='blue')
+            #az.plot(pos_sensor.T[0], pos_sensor.T[1], pos_sensor.T[2], alpha=.3, color='blue')
             az.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
 
     global ani
@@ -192,4 +195,4 @@ def uniaxial_dynamic_cal(client, EPSILON=1, AMOUNT_OF_NEW_POINTS=10, NUMBER_OF_P
     plt.tight_layout()
     
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
-uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=2)
+uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=30)
