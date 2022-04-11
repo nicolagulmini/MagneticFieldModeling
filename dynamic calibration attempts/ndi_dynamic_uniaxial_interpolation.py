@@ -4,8 +4,10 @@ import numpy as np
 from queue import Queue
 from scipy import interpolate
 import time
+import sys
 import pyigtl
 from sklearn.metrics.pairwise import rbf_kernel
+np.set_printoptions(threshold=sys.maxsize)
 
 def produce_basis_vectors_for_prediction(n):
     to_pred_x = np.array([np.ones(shape=(n)), np.zeros(shape=(n)), np.zeros(shape=(n))])
@@ -34,17 +36,23 @@ class uniaxial_to_calib:
         self.k = self.sigma*np.eye(self.points.shape[0])+self.produce_kernel(self.points, self.points)
         
     def update_kernel(self, new_points):
+        self.update_points(new_points)
         if self.k is None:
-            self.update_points(new_points)
             self.set_kernel()
             return
+        print('self.k prima di rimuovere sigma:', self.k)
         self.k = self.k - self.sigma*np.eye(self.k.shape[0])
-        self.update_points(new_points)
+        print('self.k dopo aver rimosso sigma:', self.k)
         K_ = self.produce_kernel(new_points, self.points)
+        print('K_:', K_)
         self.k = np.concatenate((self.k, K_[:, :self.k.shape[0]]))
-        self.k = np.concatenate((self.k.T, K_)).T
+        print('self.k dopo chegli ho aggiunto le righe:', self.k)
+        self.k = np.concatenate((self.k.T, K_))
+        print('self.k dopo chegli ho aggiunto le colonne:', self.k)
         self.k = self.k + self.sigma*np.eye(self.k.shape[0])
-        print(self.k == self.sigma*np.eye(self.points.shape[0])+self.produce_kernel(self.points, self.points))
+        print('self.k dopo chegli ho aggiunto sigma:', self.k)
+        self.k = self.sigma*np.eye(self.points.shape[0])+self.produce_kernel(self.points, self.points)
+        print('self.k target:', self.k)
         
     def uncertainty(self, stack_grid):
         pred_kernel = self.produce_kernel(stack_grid, self.points)
