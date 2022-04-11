@@ -41,10 +41,10 @@ class uniaxial_to_calib:
         self.k = self.k - self.sigma*np.eye(self.k.shape[0])
         self.update_points(new_points)
         K_ = self.produce_kernel(new_points, self.points)
-        print(self.k.shape, K_.shape, K_[:, :self.k.shape[0]].shape)
-        self.k = np.r_[self.k, K_[:, :self.k.shape[0]]]
-        self.k = np.c_[self.k, K_.T] 
+        self.k = np.concatenate((self.k, K_[:, :self.k.shape[0]]))
+        self.k = np.concatenate((self.k.T, K_)).T
         self.k = self.k + self.sigma*np.eye(self.k.shape[0])
+        print(self.k == self.sigma*np.eye(self.points.shape[0])+self.produce_kernel(self.points, self.points))
         
     def uncertainty(self, stack_grid):
         pred_kernel = self.produce_kernel(stack_grid, self.points)
