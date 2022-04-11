@@ -22,6 +22,8 @@ class uniaxial_to_calib:
         self.sigma = sigma
         self.points = np.array([])
         self.k = None
+        self.pred_kernel = None
+        self.diag_on_grid_for_cholensky = None
         
     def update_points(self, new_points):
         if self.points.shape[0] == 0:
@@ -46,11 +48,17 @@ class uniaxial_to_calib:
         self.k = np.concatenate((self.k, K_.T), axis=1)
         self.k = self.k + self.sigma*np.eye(self.k.shape[0])
         
-    def uncertainty(self, stack_grid):
-        pred_kernel = self.produce_kernel(stack_grid, self.points)
+    def uncertainty(self, stack_grid, new_points):
+        pred_kernel_on_new_points = self.produce_kernel(stack_grid, new_points)
+        if self.pred_kernel is None:
+            self.pred_kernel = pred_kernel_on_new_points
+        else:
+            self.pred_kernel = np.concatenate((self.pred_kernel, pred_kernel_on_new_points), axis=1)
         L = np.linalg.cholesky(self.k)
-        Lk = np.linalg.solve(L, np.transpose(pred_kernel))
-        stdv = np.sqrt(np.diag(rbf_kernel(stack_grid, gamma=self.gamma))-np.sum(Lk**2, axis=0))
+        Lk = np.linalg.solve(L, np.transpose(self.pred_kernel))
+        if self.diag_on_grid_for_cholensky is None:
+            self.diag_on_grid_for_cholensky = np.diag(rbf_kernel(stack_grid, gamma=self.gamma))
+        stdv = np.sqrt(self.diag_on_grid_for_cholensky-np.sum(Lk**2, axis=0))
         return stdv
     
 class cube_to_calib:
@@ -83,7 +91,7 @@ class cube_to_calib:
     
     def update_uncert_vis(self, new_points):
         self.interpolator.update_kernel(new_points)
-        return self.interpolator.uncertainty(self.stack_grid)
+        return self.interpolator.uncertainty(self.stack_grid, new_points)
 
 def uniaxial_dynamic_cal(client, EPSILON=1, AMOUNT_OF_NEW_POINTS=10, NUMBER_OF_PAST_POINTS_TO_VIS=10, GAMMA=.0005, SIGMA=(2.5e-3)**2, interval=300):
     # mm of tolerance for the visualization of the cube
