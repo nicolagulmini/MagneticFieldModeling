@@ -27,7 +27,7 @@ class uniaxial_to_calib:
         if self.points.shape[0] == 0:
             self.points = new_points
         else:
-            self.points = np.insert(self.points, 0, new_points, axis=0)
+            self.points = np.concatenate((self.points, new_points))
         
     def produce_kernel(self, X, Y):
         return rbf_kernel(X[:, :3], Y[:, :3], gamma=self.gamma) * np.tensordot(X[:, 3:], Y[:, 3:], axes=(1, 1))
@@ -40,19 +40,11 @@ class uniaxial_to_calib:
         if self.k is None:
             self.set_kernel()
             return
-        print('self.k prima di rimuovere sigma:', self.k)
         self.k = self.k - self.sigma*np.eye(self.k.shape[0])
-        print('self.k dopo aver rimosso sigma:', self.k)
         K_ = self.produce_kernel(new_points, self.points)
-        print('K_:', K_)
         self.k = np.concatenate((self.k, K_[:, :self.k.shape[0]]))
-        print('self.k dopo chegli ho aggiunto le righe:', self.k)
-        self.k = np.concatenate((self.k.T, K_))
-        print('self.k dopo chegli ho aggiunto le colonne:', self.k)
+        self.k = np.concatenate((self.k, K_.T), axis=1)
         self.k = self.k + self.sigma*np.eye(self.k.shape[0])
-        print('self.k dopo chegli ho aggiunto sigma:', self.k)
-        self.k = self.sigma*np.eye(self.points.shape[0])+self.produce_kernel(self.points, self.points)
-        print('self.k target:', self.k)
         
     def uncertainty(self, stack_grid):
         pred_kernel = self.produce_kernel(stack_grid, self.points)
@@ -200,4 +192,4 @@ def uniaxial_dynamic_cal(client, EPSILON=1, AMOUNT_OF_NEW_POINTS=10, NUMBER_OF_P
     plt.tight_layout()
     
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
-uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=10)
+uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=2)
