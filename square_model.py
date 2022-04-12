@@ -16,8 +16,6 @@ class CoilModel:
         y_centres = np.array(module_config['centers_y'])
         y_centres = y_centres * 1.0e-3
         
-        num_coils = x_centres.shape[0]
-        
         x_points_a = np.array([-61.5e-3/np.sqrt(2), 0, 61.5e-3 / np.sqrt(2),0, - 61.5e-3 / np.sqrt(2)])
         y_points_a = np.array([0, - 61.5e-3 / np.sqrt(2), 0, 61.5e-3 / np.sqrt(2), 0])
         z_points_a = np.zeros([1, 5]) -1.6e-3 / 2
