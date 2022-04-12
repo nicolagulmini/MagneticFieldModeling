@@ -93,7 +93,7 @@ class cube_to_calib:
         self.interpolator.update_kernel(new_points)
         return self.interpolator.uncertainty(self.stack_grid, new_points)
 
-def uniaxial_dynamic_cal(client, EPSILON=1, AMOUNT_OF_NEW_POINTS=10, NUMBER_OF_PAST_POINTS_TO_VIS=10, GAMMA=.0005, SIGMA=(2.5e-3)**2, interval=300):
+def uniaxial_dynamic_cal(client, EPSILON=1, AMOUNT_OF_NEW_POINTS=10, NUMBER_OF_PAST_POINTS_TO_VIS=10, origin=np.array([-20., -20., 105.]), side_length=40., GAMMA=.0005, SIGMA=(2.5e-3)**2, interval=300):
     # mm of tolerance for the visualization of the cube
     if AMOUNT_OF_NEW_POINTS < 4:
         AMOUNT_OF_NEW_POINTS = 4 # for the interpolation of the curve
@@ -109,7 +109,8 @@ def uniaxial_dynamic_cal(client, EPSILON=1, AMOUNT_OF_NEW_POINTS=10, NUMBER_OF_P
     az = fig.add_subplot(1, 3, 3, projection='3d')
     
     # define the cube
-    cube = cube_to_calib(origin=np.array([-20., -20., 105.]), sigma=SIGMA)
+    #cube = cube_to_calib(origin=np.array([-20., -20., 105.]), sigma=SIGMA)
+    cube = cube_to_calib(origin=origin, side_length=side_length, sigma=SIGMA)
 
     zline = cube.grid.T[2]
     yline = cube.grid.T[1]
@@ -203,4 +204,4 @@ def uniaxial_dynamic_cal(client, EPSILON=1, AMOUNT_OF_NEW_POINTS=10, NUMBER_OF_P
     plt.tight_layout()
     
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
-uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=30)
+uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=15, origin=np.array([0., 0., 0.]), side_length=40., SIGMA=1e-10)
