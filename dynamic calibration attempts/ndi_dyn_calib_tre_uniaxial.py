@@ -136,15 +136,17 @@ class tri_uniaxial_to_calib:
         self.diag_on_grid_for_cholensky = None
         self.w = None # w are the weights and their dim is (3m, 8) where m is the number of grid points and 8 = coils
         
-    def update_points(self, new_points): 
+    def update_points(self, new_points, new_measures): 
         # shape of new_points must be (number_of_new_points, 12)
         # where each point has (x, y, z, n1x, n1y, n1z, n2x, n2y, n2z, n3x, n3y, n3z)
         if self.points.shape[0] == 0:
             self.points = new_points
+            self.measures = new_measures
         else:
             self.points = np.concatenate((self.points, new_points))
+            self.measures = np.concatenate((self.measures, new_measures))
         
-    def kernel_rows(self, x):
+    def kernels_rows(self, x):
         row = rbf_kernel(x[:, :3], self.grid_points, self.gamma)
         rows_for_kernel_1, rows_for_kernel_2, rows_for_kernel_3 = [np.zeros((row.shape[0], self.grid_points.shape[0]*3)) for _ in range(3)]
         for i in range(row.shape[0]):
@@ -153,14 +155,11 @@ class tri_uniaxial_to_calib:
             rows_for_kernel_2[i] = np.concatenate((x[i][6]*tmp, x[i][7]*tmp, x[i][8]*tmp))
             rows_for_kernel_3[i] = np.concatenate((x[i][9]*tmp, x[i][10]*tmp, x[i][11]*tmp))
         return rows_for_kernel_1, rows_for_kernel_2, rows_for_kernel_3
-    
-    def set_kernel(self):
-        self.k = self.sigma*np.eye(self.points.shape[0])+self.produce_kernel(self.points, self.points)
         
-    def update_kernel(self, new_points):
-        self.update_points(new_points)
-        if self.k is None:
-            self.set_kernel()
+    def update_state(self, new_points, new_measures): # no prediction
+        self.update_points(new_points, new_measures)
+        if self.sensor_1_kernel is None: # if this is None then also the others has to be None
+            self.sensor_1_kernel, self.sensor_2_kernel, self.sensor_3_kernel = self.kernels_rows(new_points)
             return
         self.k = self.k - self.sigma*np.eye(self.k.shape[0])
         K_ = self.produce_kernel(new_points, self.points)
