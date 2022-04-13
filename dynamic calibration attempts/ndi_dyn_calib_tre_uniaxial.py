@@ -9,24 +9,150 @@ import pyigtl
 from sklearn.metrics.pairwise import rbf_kernel
 #np.set_printoptions(threshold=sys.maxsize)
 
+X_CENTERS = [-93.543, 0., 93.543, -68.55, 68.55, -93.543, 0., 93.543]
+Y_CENTERS = [93.543, 68.55, 93.543, 0., 0., -93.543, -68.55, -93.543]
+
+class CoilModel:
+
+    def __init__(self, module_config={'centers_x': None, 'centers_y': None}):
+        '''
+            The init function should initialise and prepare all data necessary for 'coil_field' to operate.
+        '''
+        x_centres = np.array(module_config['centers_x'])
+        x_centres = x_centres * 1.0e-3
+        y_centres = np.array(module_config['centers_y'])
+        y_centres = y_centres * 1.0e-3
+        
+        num_coils = x_centres.shape[0]
+        
+        x_points_a = np.array([-61.5e-3/np.sqrt(2), 0, 61.5e-3 / np.sqrt(2),0, - 61.5e-3 / np.sqrt(2)])
+        y_points_a = np.array([0, - 61.5e-3 / np.sqrt(2), 0, 61.5e-3 / np.sqrt(2), 0])
+        z_points_a = np.zeros([1, 5]) -1.6e-3 / 2
+        
+        x_points_v = [-61.5e-3 / 2, 61.5e-3 / 2, 61.5e-3 / 2, - 61.5e-3 / 2, - 61.5e-3 / 2]
+        y_points_v = [-61.5e-3 / 2, - 61.5e-3 / 2, 61.5e-3 / 2, 61.5e-3 / 2, - 61.5e-3 / 2]
+        z_points_v = np.zeros([1, 5]) - 1.6e-3 / 2
+        
+        x_points_1 = x_points_v + x_centres[0]
+        x_points_2 = x_points_a + x_centres[1]
+        x_points_3 = x_points_v + x_centres[2]
+        x_points_4 = x_points_a + x_centres[3]
+        x_points_5 = x_points_a + x_centres[4]
+        x_points_6 = x_points_v + x_centres[5]
+        x_points_7 = x_points_a + x_centres[6]
+        x_points_8 = x_points_v + x_centres[7]
+        
+        y_points_1 = y_points_v + y_centres[0]
+        y_points_2 = y_points_a + y_centres[1]
+        y_points_3 = y_points_v + y_centres[2]
+        y_points_4 = y_points_a + y_centres[3]
+        y_points_5 = y_points_a + y_centres[4]
+        y_points_6 = y_points_v + y_centres[5]
+        y_points_7 = y_points_a + y_centres[6]
+        y_points_8 = y_points_v + y_centres[7]
+        
+        z_points_1 = z_points_v
+        z_points_2 = z_points_a
+        z_points_3 = z_points_v
+        z_points_4 = z_points_a
+        z_points_5 = z_points_a
+        z_points_6 = z_points_v
+        z_points_7 = z_points_a
+        z_points_8 = z_points_v
+        
+        self.x_points = np.array(
+            [x_points_1, x_points_2, x_points_3, x_points_4, x_points_5, x_points_6, x_points_7, x_points_8])
+        self.y_points = np.array(
+            [y_points_1, y_points_2, y_points_3, y_points_4, y_points_5, y_points_6, y_points_7, y_points_8])
+        self.z_points = np.array(
+            [z_points_1, z_points_2, z_points_3, z_points_4, z_points_5, z_points_6, z_points_7, z_points_8])
+        
+    def coil_field_total(self, px, py, pz):
+        
+        '''
+            must be defined. 
+            A User defined function which returns the magnetic field intensity H at a point in space P.
+            This function must be defined as accepting a cartesian coordinate (x,y,z),
+            and returning a three magnetic intensity values Hx, Hy and Hz
+        '''
+        
+        I = 1
+        numPoints = self.x_points.shape[1]
+
+        # matrix conversions
+
+        x_points = np.matrix(self.x_points)
+        y_points = np.matrix(self.y_points)
+        z_points = np.matrix(self.z_points)
+
+        ax = x_points[:, 1:numPoints] - x_points[:, 0:(numPoints - 1)]
+        ay = y_points[:, 1:numPoints] - y_points[:, 0:(numPoints - 1)]
+        az = z_points[:, 1:numPoints] - z_points[:, 0:(numPoints - 1)]
+
+        bx = x_points[:, 1:numPoints] - px
+        by = y_points[:, 1:numPoints] - py
+        bz = z_points[:, 1:numPoints] - pz
+
+        cx = x_points[:, 0:(numPoints - 1)] - px
+        cy = y_points[:, 0:(numPoints - 1)] - py
+        cz = z_points[:, 0:(numPoints - 1)] - pz
+
+        c_mag = np.sqrt(np.square(cx) + np.square(cy) + np.square(cz))
+        b_mag = np.sqrt(np.square(bx) + np.square(by) + np.square(bz))
+
+        a_dot_b = np.multiply(ax, bx) + np.multiply(ay, by) + np.multiply(az, bz)
+        a_dot_c = np.multiply(ax, cx) + np.multiply(ay, cy) + np.multiply(az, cz)
+
+        c_cross_a_x = np.multiply(az, cy) - np.multiply(ay, cz)
+        c_cross_a_y = np.multiply(ax, cz) - np.multiply(az, cx)
+        c_cross_a_z = np.multiply(ay, cx) - np.multiply(ax, cy)
+
+        c_cross_a_mag_squared = np.square(c_cross_a_x) + np.square(c_cross_a_y) + np.square(c_cross_a_z)
+
+        scalar = np.divide((np.divide(a_dot_c, c_mag) - np.divide(a_dot_b, b_mag)), c_cross_a_mag_squared)
+
+        hx_dum = (I / (4 * np.pi)) * np.multiply(c_cross_a_x, scalar)
+        hy_dum = (I / (4 * np.pi)) * np.multiply(c_cross_a_y, scalar)
+        hz_dum = (I / (4 * np.pi)) * np.multiply(c_cross_a_z, scalar)
+
+        hx = np.sum(hx_dum, axis=1)
+        hy = np.sum(hy_dum, axis=1)
+        hz = np.sum(hz_dum, axis=1)
+
+        return hx, hy, hz
+
 class tri_uniaxial_to_calib:
     
-    def __init__(self, gamma, sigma):
+    def __init__(self, gamma, sigma, grid_points):
         self.gamma = gamma
         self.sigma = sigma
         self.points = np.array([])
-        self.k = None
-        self.pred_kernel = None
+        self.measures = np.array([])
+        self.sensor_1_kernel = None
+        self.sensor_2_kernel = None
+        self.sensor_3_kernel = None
+        self.grid_points = grid_points
+        self.pred_kernel_on_grid = None
         self.diag_on_grid_for_cholensky = None
+        self.w = None # w are the weights and their dim is (3m, 8) where m is the number of grid points and 8 = coils
         
-    def update_points(self, new_points):
+    def update_points(self, new_points): 
+        # shape of new_points must be (number_of_new_points, 12)
+        # where each point has (x, y, z, n1x, n1y, n1z, n2x, n2y, n2z, n3x, n3y, n3z)
         if self.points.shape[0] == 0:
             self.points = new_points
         else:
             self.points = np.concatenate((self.points, new_points))
         
-    def produce_kernel(self, X, Y):
-        return rbf_kernel(X[:, :3], Y[:, :3], gamma=self.gamma) * np.tensordot(X[:, 3:], Y[:, 3:], axes=(1, 1))
+    def kernel_rows(self, x):
+        row = rbf_kernel(x[:, :3], self.grid_points, self.gamma)
+        rows_for_kernel_1, rows_for_kernel_2, rows_for_kernel_3 = [np.zeros((row.shape[0], self.grid_points.shape[0]*3)) for _ in range(3)]
+        for i in range(row.shape[0]):
+            tmp = row[i]
+            rows_for_kernel_1[i] = np.concatenate((x[i][3]*tmp, x[i][4]*tmp, x[i][5]*tmp))
+            rows_for_kernel_2[i] = np.concatenate((x[i][6]*tmp, x[i][7]*tmp, x[i][8]*tmp))
+            rows_for_kernel_3[i] = np.concatenate((x[i][9]*tmp, x[i][10]*tmp, x[i][11]*tmp))
+        return rows_for_kernel_1, rows_for_kernel_2, rows_for_kernel_3
     
     def set_kernel(self):
         self.k = self.sigma*np.eye(self.points.shape[0])+self.produce_kernel(self.points, self.points)
@@ -61,11 +187,11 @@ class cube_to_calib:
         self.origin_corner = origin # numpy vector for position [x, y, z]
         # for the opposite corner, for example, it is sufficient to do self.origin_corner + self.side_length * numpy.ones(3)
         self.side_length = side_length # in centimeters
-        self.interpolator = uniaxial_to_calib(gamma, sigma)
+        self.interpolator = tri_uniaxial_to_calib(gamma, sigma)
         
         x = np.linspace(self.origin_corner[0], self.origin_corner[0]+self.side_length, int(self.side_length/point_density)+1) # i think
-        y = np.linspace(self.origin_corner[1], self.origin_corner[1]+self.side_length, 5)
-        z = np.linspace(self.origin_corner[2], self.origin_corner[2]+self.side_length, 5)
+        y = np.linspace(self.origin_corner[1], self.origin_corner[1]+self.side_length, int(self.side_length/point_density)+1)
+        z = np.linspace(self.origin_corner[2], self.origin_corner[2]+self.side_length, int(self.side_length/point_density)+1)
 
         # is there a better method to do so?
         grid = np.zeros((int(x.shape[0]*y.shape[0]*z.shape[0]), 3))
@@ -77,7 +203,6 @@ class cube_to_calib:
                     c += 1
         self.grid = grid
         
-        basis_vectors_x, basis_vectors_y, basis_vectors_z = produce_basis_vectors_for_prediction(self.grid.shape[0])
         high_dim_x = np.transpose(np.concatenate((np.transpose(self.grid), basis_vectors_x)))
         high_dim_y = np.transpose(np.concatenate((np.transpose(self.grid), basis_vectors_y)))
         high_dim_z = np.transpose(np.concatenate((np.transpose(self.grid), basis_vectors_z)))
@@ -112,13 +237,18 @@ def uniaxial_dynamic_cal(client, EPSILON=1, AMOUNT_OF_NEW_POINTS=10, NUMBER_OF_P
         
     q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
     
+    coil_model = CoilModel(module_config={'centers_x': X_CENTERS, 
+                                          'centers_y': Y_CENTERS})
+    
     def animate(k):
         global COUNTER # to allow the modification of this external variable also inside this method
         for _ in range(AMOUNT_OF_NEW_POINTS):
             message = client.wait_for_message("SensorTipToFG", timeout=5)
             if message is not None:
                 pos = message.matrix.T[3][:3]
-                ori = message.matrix.T[2][:3]
+                n_matrix = message.matrix.T[:3, :3]
+                # define the transformations
+                # produce the magnetic field measurements from the code which simulates them
                 q.put(np.concatenate((pos, ori), axis=0))
 
         if len(q.queue) >= AMOUNT_OF_NEW_POINTS: 
