@@ -2,8 +2,6 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
 from queue import Queue
-from scipy import interpolate
-import time
 import sys
 import pyigtl
 from sklearn.metrics.pairwise import rbf_kernel
