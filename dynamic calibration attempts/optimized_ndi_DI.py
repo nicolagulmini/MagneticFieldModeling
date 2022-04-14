@@ -2,10 +2,9 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
 from queue import Queue
-import sys
 import pyigtl
 from sklearn.metrics.pairwise import rbf_kernel
-#np.set_printoptions(threshold=sys.maxsize)
+np.set_printoptions(threshold=sys.maxsize)
 
 class CoilModel:
 
