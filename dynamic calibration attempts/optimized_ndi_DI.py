@@ -114,9 +114,10 @@ class CoilModel:
 
         return hx, hy, hz
 
+global coil_model
 coil_model = CoilModel(module_config={'centers_x': [-93.543, 0., 93.543, -68.55, 68.55, -93.543, 0., 93.543], 
                                       'centers_y': [93.543, 68.55, 93.543, 0., 0., -93.543, -68.55, -93.543]})
-global coil_model
+
 def theoretical_field(model, point):
     return np.concatenate(model.coil_field_total(point[0], point[1], point[2]), axis=1).T # (3, 8)
     
@@ -231,8 +232,8 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
     ay = fig.add_subplot(1, 3, 2, projection='3d')
     az = fig.add_subplot(1, 3, 3, projection='3d')
     
+    global cube
     cube = cube_to_calib(origin=origin, side_length=side_length, sigma=SIGMA)
-    global cube 
     
     zline = cube.grid.T[2]
     yline = cube.grid.T[1]
@@ -310,8 +311,8 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
             ay.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
             az.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
 
-    ani = FuncAnimation(plt.gcf(), animate, interval=interval)
     global ani
+    ani = FuncAnimation(plt.gcf(), animate, interval=interval)
     plt.tight_layout()
     
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
