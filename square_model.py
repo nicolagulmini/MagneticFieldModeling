@@ -3,7 +3,6 @@
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 class CoilModel:
 
@@ -163,5 +162,5 @@ y_centers = [93.543, 68.55, 93.543, 0., 0., -93.543, -68.55, -93.543]
 coil_model = CoilModel(module_config={'centers_x': x_centers, 
                                       'centers_y': y_centers})
 
-h = coil_model.coil_field_total(0., 0., 0.01)
+h = coil_model.coil_field_total(0., 0., 0.)
 print(h)
