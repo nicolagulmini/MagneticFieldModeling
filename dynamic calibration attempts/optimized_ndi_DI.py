@@ -4,6 +4,7 @@ import numpy as np
 from queue import Queue
 import pyigtl
 from sklearn.metrics.pairwise import rbf_kernel
+import sys
 np.set_printoptions(threshold=sys.maxsize)
 
 class CoilModel:
