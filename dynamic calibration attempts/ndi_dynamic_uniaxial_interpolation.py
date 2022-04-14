@@ -70,8 +70,8 @@ class cube_to_calib:
         self.interpolator = uniaxial_to_calib(gamma, sigma)
         
         x = np.linspace(self.origin_corner[0], self.origin_corner[0]+self.side_length, int(self.side_length/point_density)+1) # i think
-        y = np.linspace(self.origin_corner[1], self.origin_corner[1]+self.side_length, 5)
-        z = np.linspace(self.origin_corner[2], self.origin_corner[2]+self.side_length, 5)
+        y = np.linspace(self.origin_corner[1], self.origin_corner[1]+self.side_length, int(self.side_length/point_density)+1)
+        z = np.linspace(self.origin_corner[2], self.origin_corner[2]+self.side_length, int(self.side_length/point_density)+1)
 
         # is there a better method to do so?
         grid = np.zeros((int(x.shape[0]*y.shape[0]*z.shape[0]), 3))
