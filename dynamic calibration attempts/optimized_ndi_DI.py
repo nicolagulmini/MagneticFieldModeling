@@ -319,4 +319,6 @@ uniaxial_dynamic_cal(client, origin=np.array([0., 0., 0.]), side_length=40., SIG
 
 # when the calibration is done
 cube.interpolator.set_weights()
-cube.interpolator.predict()
+grid_field = cube.interpolator.predict()
+print(grid_field.shape)
+print(grid_field)
