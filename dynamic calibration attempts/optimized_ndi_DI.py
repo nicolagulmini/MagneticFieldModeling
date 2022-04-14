@@ -149,7 +149,7 @@ class uniaxial_to_calib:
             self.measures = new_measures
         else:
             self.points = np.concatenate((self.points, new_points))
-            self.measures = np.concatenate((self.points, new_measures))
+            self.measures = np.concatenate((self.measures, new_measures))
         
     def produce_kernel(self, X, Y):
         return rbf_kernel(X[:, :3], Y[:, :3], gamma=self.gamma) * np.tensordot(X[:, 3:], Y[:, 3:], axes=(1, 1))
@@ -163,14 +163,20 @@ class uniaxial_to_calib:
             self.set_kernel()
             return
         self.k = self.k - self.sigma*np.eye(self.k.shape[0])
+        print(self.k.shape)
         K_ = self.produce_kernel(new_points, self.points)
+        # sistema qua... dà errore
         self.k = np.concatenate((self.k, K_[:, :self.k.shape[0]]))
+        print(self.k.shape)
         self.k = np.concatenate((self.k, K_.T), axis=1)
+        print(self.k.shape)
         self.k = self.k + self.sigma*np.eye(self.k.shape[0])
+        print(self.k.shape)
         
     def set_weights(self):
-        if self.k.shape[0] < self.measures.shape[0]:
-            self.set_kernel()
+        if self.k.shape[0] != self.measures.shape[0]:
+            print("Error. Return")
+            return
         self.w = np.linalg.solve(self.k, self.measures) # it has to be (number_of_grid_points, 8)
         
     def predict(self):  
@@ -185,7 +191,7 @@ class uniaxial_to_calib:
             self.pred_kernel = np.concatenate((self.pred_kernel, pred_kernel_on_new_points), axis=1)
         
     def uncertainty(self, new_points, new_measures):
-        self.update_pred_kernel(self, new_points, new_measures)
+        self.update_pred_kernel(new_points, new_measures)
         L = np.linalg.cholesky(self.k)
         Lk = np.linalg.solve(L, np.transpose(self.pred_kernel))
         stdv = np.sqrt(self.diag_on_grid_for_cholensky-np.sum(Lk**2, axis=0))
@@ -248,8 +254,8 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
             if message is not None:
                 pos = message.matrix.T[3][:3]
                 ori = message.matrix.T[2][:3]
-                theor_field_3D = theoretical_field(coil_model, pos)
-                q.put(np.concatenate((pos, ori, sum(theor_field_3D*ori[:,np.newaxis])), axis=0))
+                tmp = np.sum(ori*theoretical_field(coil_model, pos), axis=0)
+                q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
 
         if len(q.queue) >= AMOUNT_OF_NEW_POINTS: 
 
@@ -285,7 +291,6 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
             
             new_points = new_raw_points[:, :6] # shape = (AMOUNT_OF_NEW_POINTS, 6)
             new_measures = new_raw_points[:, 6:] # shape = (AMOUNT_OF_NEW_POINTS, 8)
-            print(new_measures.shape)
             unc = cube.update_uncert_vis(new_points, new_measures)
             
             dims = int(unc.shape[0]/3)
@@ -316,10 +321,11 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
     plt.tight_layout()
     
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
-uniaxial_dynamic_cal(client, origin=np.array([0., 0., 0.]), side_length=40., SIGMA=1e-10)
+uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=4, origin=np.array([0., 0., 0.]), side_length=40., SIGMA=1e-10)
 
 # when the calibration is done
-cube.interpolator.set_weights()
-grid_field = cube.interpolator.predict()
-print(grid_field.shape)
-print(grid_field)
+while cube.interpolator.k is not None:
+    cube.interpolator.set_weights()
+    grid_field = cube.interpolator.predict()
+    print(grid_field.shape)
+    print(grid_field)
