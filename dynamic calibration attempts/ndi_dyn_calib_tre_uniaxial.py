@@ -124,27 +124,43 @@ class CoilModel:
 class tri_uniaxial_to_calib:
     
     def __init__(self, gamma, sigma, grid_points):
+        
         self.gamma = gamma
         self.sigma = sigma
+        
         self.points = np.array([])
-        self.measures = np.array([])
+        
         self.sensor_1_kernel = None
         self.sensor_2_kernel = None
         self.sensor_3_kernel = None
+        
+        self.measures_1 = np.array([])
+        self.measures_2 = np.array([])
+        self.measures_3 = np.array([])
+        
         self.grid_points = grid_points
+        
+        self.w = np.zeros((3*self.grid_points.shape[0], 8)) # 8 = number of coil
+        
         self.pred_kernel_on_grid = None
         self.diag_on_grid_for_cholensky = None
-        self.w = None # w are the weights and their dim is (3m, 8) where m is the number of grid points and 8 = coils
         
     def update_points(self, new_points, new_measures): 
         # shape of new_points must be (number_of_new_points, 12)
         # where each point has (x, y, z, n1x, n1y, n1z, n2x, n2y, n2z, n3x, n3y, n3z)
+        # and new_measures is (number_of_new_points, 3)
+        # but we need to split the 3 sensors' measures 
         if self.points.shape[0] == 0:
             self.points = new_points
-            self.measures = new_measures
+            self.measures_1 = new_measures[:,0]
+            self.measures_2 = new_measures[:,1]
+            self.measures_3 = new_measures[:,2]
         else:
             self.points = np.concatenate((self.points, new_points))
             self.measures = np.concatenate((self.measures, new_measures))
+            self.measures_1 = np.concatenate((self.measures_1, new_measures[:,0]))
+            self.measures_2 = np.concatenate((self.measures_2, new_measures[:,1]))
+            self.measures_3 = np.concatenate((self.measures_3, new_measures[:,2]))
         
     def kernels_rows(self, x):
         row = rbf_kernel(x[:, :3], self.grid_points, self.gamma)
@@ -158,14 +174,13 @@ class tri_uniaxial_to_calib:
         
     def update_state(self, new_points, new_measures): # no prediction
         self.update_points(new_points, new_measures)
+        new_kernels_rows = self.kernels_rows(new_points)
         if self.sensor_1_kernel is None: # if this is None then also the others has to be None
-            self.sensor_1_kernel, self.sensor_2_kernel, self.sensor_3_kernel = self.kernels_rows(new_points)
+            self.sensor_1_kernel, self.sensor_2_kernel, self.sensor_3_kernel = new_kernels_rows
             return
-        self.k = self.k - self.sigma*np.eye(self.k.shape[0])
-        K_ = self.produce_kernel(new_points, self.points)
-        self.k = np.concatenate((self.k, K_[:, :self.k.shape[0]]))
-        self.k = np.concatenate((self.k, K_.T), axis=1)
-        self.k = self.k + self.sigma*np.eye(self.k.shape[0])
+        self.sensor_1_kernel = np.concatenate((self.sensor_1_kernel, new_kernels_rows[0]))
+        self.sensor_2_kernel = np.concatenate((self.sensor_2_kernel, new_kernels_rows[1]))
+        self.sensor_3_kernel = np.concatenate((self.sensor_3_kernel, new_kernels_rows[2]))
         
     def uncertainty(self, stack_grid, new_points):
         pred_kernel_on_new_points = self.produce_kernel(stack_grid, new_points)
