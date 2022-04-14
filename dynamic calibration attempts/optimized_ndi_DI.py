@@ -7,9 +7,6 @@ import pyigtl
 from sklearn.metrics.pairwise import rbf_kernel
 np.set_printoptions(threshold=sys.maxsize)
 
-global ani
-global cube
-
 def produce_basis_vectors_for_prediction(n):
     to_pred_x = np.array([np.ones(shape=(n)), np.zeros(shape=(n)), np.zeros(shape=(n))])
     to_pred_y = np.array([np.zeros(shape=(n)), np.ones(shape=(n)), np.zeros(shape=(n))])
@@ -122,7 +119,8 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
     az = fig.add_subplot(1, 3, 3, projection='3d')
     
     cube = cube_to_calib(origin=origin, side_length=side_length, sigma=SIGMA)
-
+    global cube 
+    
     zline = cube.grid.T[2]
     yline = cube.grid.T[1]
     xline = cube.grid.T[0]
@@ -130,12 +128,13 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
     q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
     
     def animate(k):
+        
         for _ in range(AMOUNT_OF_NEW_POINTS):
             message = client.wait_for_message("SensorTipToFG", timeout=5)
             if message is not None:
                 pos = message.matrix.T[3][:3]
                 ori = message.matrix.T[2][:3]
-                q.put(np.concatenate((pos, ori), axis=0))
+                q.put(np.concatenate((pos, ori, np.random.random((8))), axis=0))
 
         if len(q.queue) >= AMOUNT_OF_NEW_POINTS: 
 
@@ -198,6 +197,7 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
             az.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
 
     ani = FuncAnimation(plt.gcf(), animate, interval=interval)
+    global ani
     plt.tight_layout()
     
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
