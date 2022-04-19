@@ -163,15 +163,10 @@ class uniaxial_to_calib:
             self.set_kernel()
             return
         self.k = self.k - self.sigma*np.eye(self.k.shape[0])
-        print(self.k.shape)
         K_ = self.produce_kernel(new_points, self.points)
-        # sistema qua... dà errore
         self.k = np.concatenate((self.k, K_[:, :self.k.shape[0]]))
-        print(self.k.shape)
         self.k = np.concatenate((self.k, K_.T), axis=1)
-        print(self.k.shape)
         self.k = self.k + self.sigma*np.eye(self.k.shape[0])
-        print(self.k.shape)
         
     def set_weights(self):
         if self.k.shape[0] != self.measures.shape[0]:
@@ -183,7 +178,7 @@ class uniaxial_to_calib:
         return np.matmul(self.kernel_on_stack_grid, self.w)
             
     def update_pred_kernel(self, new_points, new_measures):
-        self.update_points(new_points, new_measures)
+        #self.update_points(new_points, new_measures) # otherwise the points are set twice
         pred_kernel_on_new_points = self.produce_kernel(self.stack_grid, new_points)
         if self.pred_kernel is None:
             self.pred_kernel = pred_kernel_on_new_points
