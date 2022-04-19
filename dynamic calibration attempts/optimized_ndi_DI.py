@@ -68,7 +68,7 @@ class CoilModel:
             This function must be defined as accepting a cartesian coordinate (x,y,z),
             and returning a three magnetic intensity values Hx, Hy and Hz
         '''
-        
+
         I = 1
         numPoints = self.x_points.shape[1]
 
@@ -140,8 +140,7 @@ class uniaxial_to_calib:
         self.pred_kernel = None # kernel between training points and stack grid
         
         self.stack_grid = stack_grid
-        self.kernel_on_stack_grid = self.produce_kernel(self.stack_grid, self.stack_grid)
-        self.diag_on_grid_for_cholensky = np.diag(self.kernel_on_stack_grid)
+        self.diag_on_grid_for_cholensky = np.diag(self.produce_kernel(self.stack_grid, self.stack_grid))
         
     def update_points(self, new_points, new_measures):
         if self.points.shape[0] == 0:
@@ -175,7 +174,8 @@ class uniaxial_to_calib:
         self.w = np.linalg.solve(self.k, self.measures) # it has to be (number_of_grid_points, 8)
         
     def predict(self):  
-        return np.matmul(self.kernel_on_stack_grid, self.w)
+        print('weights:', self.w.shape)
+        return np.matmul(self.pred_kernel, self.w)
             
     def update_pred_kernel(self, new_points, new_measures):
         #self.update_points(new_points, new_measures) # otherwise the points are set twice
@@ -310,17 +310,17 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
             ax.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
             ay.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
             az.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
+            
+            cube.interpolator.set_weights()
+            grid_field = cube.interpolator.predict()
+            tmp = coil_model.coil_field_total(cube.grid[0][0], cube.grid[0][1], cube.grid[0][2])
+            print(tmp[0][0].A1, tmp[1][0].A1, tmp[2][0].A1)
+            print(grid_field[0][0], grid_field[125][0], grid_field[250][0])
+            
 
     global ani
     ani = FuncAnimation(plt.gcf(), animate, interval=interval)
     plt.tight_layout()
     
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
-uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=4, origin=np.array([0., 0., 0.]), side_length=40., SIGMA=1e-10)
-
-# when the calibration is done
-while cube.interpolator.k is not None:
-    cube.interpolator.set_weights()
-    grid_field = cube.interpolator.predict()
-    print(grid_field.shape)
-    print(grid_field)
+uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=40, origin=np.array([0., 0., 0.]), side_length=40., SIGMA=1e-10)
