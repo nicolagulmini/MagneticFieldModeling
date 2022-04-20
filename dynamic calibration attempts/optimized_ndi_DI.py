@@ -5,6 +5,7 @@ from queue import Queue
 import pyigtl
 from sklearn.metrics.pairwise import rbf_kernel
 import sys
+from time import sleep
 np.set_printoptions(threshold=sys.maxsize)
 
 class CoilModel:
@@ -249,8 +250,9 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
             if message is not None:
                 pos = message.matrix.T[3][:3]
                 ori = message.matrix.T[2][:3]
-                tmp = np.sum(ori*theoretical_field(coil_model, pos), axis=0)
+                tmp = np.dot(ori, theoretical_field(coil_model, pos))
                 q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
+            sleep(.1)
 
         if len(q.queue) >= AMOUNT_OF_NEW_POINTS: 
 
@@ -311,16 +313,17 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
             ay.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
             az.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
             
-            cube.interpolator.set_weights()
-            grid_field = cube.interpolator.predict()
-            tmp = coil_model.coil_field_total(cube.grid[0][0], cube.grid[0][1], cube.grid[0][2])
-            print(tmp[0][0].A1, tmp[1][0].A1, tmp[2][0].A1)
-            print(grid_field[0][0], grid_field[125][0], grid_field[250][0])
+            if cube.interpolator.w is not None:
+                if cube.interpolator.w.shape[0] % AMOUNT_OF_NEW_POINTS*4 == 0:
+                    cube.interpolator.set_weights()
+                    grid_field = cube.interpolator.predict()
+        
+                    print(theoretical_field(coil_model, cube.grid[0])[0])
+                    print(grid_field[0][0], grid_field[1][0], grid_field[2][0])
             
-
     global ani
     ani = FuncAnimation(plt.gcf(), animate, interval=interval)
     plt.tight_layout()
     
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
-uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=40, origin=np.array([0., 0., 0.]), side_length=40., SIGMA=1e-10)
+uniaxial_dynamic_cal(None, AMOUNT_OF_NEW_POINTS=40, origin=np.array([0., 0., 0.]), side_length=40., SIGMA=1e-10)
