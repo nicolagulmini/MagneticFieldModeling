@@ -116,8 +116,8 @@ class CoilModel:
         return hx, hy, hz
 
 global coil_model
-coil_model = CoilModel(module_config={'centers_x': [-93.543, 0., 93.543, -68.55, 68.55, -93.543, 0., 93.543], 
-                                      'centers_y': [93.543, 68.55, 93.543, 0., 0., -93.543, -68.55, -93.543]})
+coil_model = CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
+                                      'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]})
 
 def theoretical_field(model, point):
     return np.concatenate(model.coil_field_total(point[0], point[1], point[2]), axis=1).T # (3, 8)
@@ -175,7 +175,6 @@ class uniaxial_to_calib:
         self.w = np.linalg.solve(self.k, self.measures) # it has to be (number_of_grid_points, 8)
         
     def predict(self):  
-        print('weights:', self.w.shape)
         return np.matmul(self.pred_kernel, self.w)
             
     def update_pred_kernel(self, new_points, new_measures):
@@ -246,15 +245,14 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
     def animate(k):
         
         for _ in range(AMOUNT_OF_NEW_POINTS):
-            #message = client.wait_for_message("SensorTipToFG", timeout=5)
-            #if message is not None:
-            if True:
-                #pos = message.matrix.T[3][:3]
-                #ori = message.matrix.T[2][:3]
-                pos, ori = cube.side_length*np.random.random(3), np.array([0., 0., 1.])
+            message = client.wait_for_message("SensorTipToFG", timeout=5)
+            if message is not None:
+            #if True:
+                pos = message.matrix.T[3][:3]
+                ori = message.matrix.T[2][:3]
+                #pos, ori = cube.side_length*np.random.random(3), np.random.random(3)
                 tmp = np.dot(ori, theoretical_field(coil_model, pos))
                 q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
-            #sleep(.1)
 
         if len(q.queue) >= AMOUNT_OF_NEW_POINTS: 
 
@@ -315,19 +313,23 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
             ay.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
             az.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
             
+            # test:
+                
             #if cube.interpolator.w is not None:
             #    if cube.interpolator.w.shape[0] % AMOUNT_OF_NEW_POINTS == 0:
             cube.interpolator.set_weights()
             grid_field = cube.interpolator.predict()
 
             tmp = theoretical_field(coil_model, cube.grid[0])
-            print(tmp[0].A1[0], tmp[1].A1[0], tmp[2].A1[0])
-            print(grid_field[0][0], grid_field[0+125][0], grid_field[0+125*2][0])
+            first_coil_field_theoretical = np.array([tmp[0].A1[0], tmp[1].A1[0], tmp[2].A1[0]])
+            grid_field_predicted = np.array([grid_field[0][0], grid_field[0+125][0], grid_field[0+125*2][0]])
+            print('theoretical field:', first_coil_field_theoretical)
+            print('predicted field:', grid_field_predicted)
             
     global ani
     ani = FuncAnimation(plt.gcf(), animate, interval=interval)
     plt.tight_layout()
     
-#client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
-client = None
+client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
+#client = None
 uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=40, origin=np.array([0., 0., 0.]), side_length=40., SIGMA=1e-10)
