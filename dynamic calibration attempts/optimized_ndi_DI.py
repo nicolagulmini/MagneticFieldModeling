@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
 from queue import Queue
-import pyigtl
+#import pyigtl
 from sklearn.metrics.pairwise import rbf_kernel
 import sys
 from time import sleep
@@ -246,13 +246,15 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
     def animate(k):
         
         for _ in range(AMOUNT_OF_NEW_POINTS):
-            message = client.wait_for_message("SensorTipToFG", timeout=5)
-            if message is not None:
-                pos = message.matrix.T[3][:3]
-                ori = message.matrix.T[2][:3]
+            #message = client.wait_for_message("SensorTipToFG", timeout=5)
+            #if message is not None:
+            if True:
+                #pos = message.matrix.T[3][:3]
+                #ori = message.matrix.T[2][:3]
+                pos, ori = cube.side_length*np.random.random(3), np.array([0., 0., 1.])
                 tmp = np.dot(ori, theoretical_field(coil_model, pos))
                 q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
-            sleep(.1)
+            #sleep(.1)
 
         if len(q.queue) >= AMOUNT_OF_NEW_POINTS: 
 
@@ -299,12 +301,12 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
             unc_z_ = unc_z[np.newaxis] / max(unc_z)
             color_vec_x = np.concatenate((unc_x_, 1-unc_x_, np.zeros(unc_x_.shape)), axis=0).T
             color_vec_y = np.concatenate((unc_y_, 1-unc_y_, np.zeros(unc_y_.shape)), axis=0).T
-            color_vec_z = np.concatenate((unc_z_, 1-unc_x_, np.zeros(unc_z_.shape)), axis=0).T
+            color_vec_z = np.concatenate((unc_z_, 1-unc_z_, np.zeros(unc_z_.shape)), axis=0).T
         
             for i in np.arange(.1, 1., .2):
                 ax.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_x_)**2, alpha = .05/i, c = color_vec_x)
-                ay.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_x_)**2, alpha = .05/i, c = color_vec_y)
-                az.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_x_)**2, alpha = .05/i, c = color_vec_z)
+                ay.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_y_)**2, alpha = .05/i, c = color_vec_y)
+                az.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_z_)**2, alpha = .05/i, c = color_vec_z)
                 
             pos_sensor = np.flip(new_points, 0)[:, :3]
             or_sensor = np.flip(new_points, 0)[:, 3:]
@@ -313,17 +315,19 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
             ay.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
             az.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
             
-            if cube.interpolator.w is not None:
-                if cube.interpolator.w.shape[0] % AMOUNT_OF_NEW_POINTS*4 == 0:
-                    cube.interpolator.set_weights()
-                    grid_field = cube.interpolator.predict()
-        
-                    print(theoretical_field(coil_model, cube.grid[0])[0])
-                    print(grid_field[0][0], grid_field[1][0], grid_field[2][0])
+            #if cube.interpolator.w is not None:
+            #    if cube.interpolator.w.shape[0] % AMOUNT_OF_NEW_POINTS == 0:
+            cube.interpolator.set_weights()
+            grid_field = cube.interpolator.predict()
+
+            tmp = theoretical_field(coil_model, cube.grid[0])
+            print(tmp[0].A1[0], tmp[1].A1[0], tmp[2].A1[0])
+            print(grid_field[0][0], grid_field[0+125][0], grid_field[0+125*2][0])
             
     global ani
     ani = FuncAnimation(plt.gcf(), animate, interval=interval)
     plt.tight_layout()
     
-client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
-uniaxial_dynamic_cal(None, AMOUNT_OF_NEW_POINTS=40, origin=np.array([0., 0., 0.]), side_length=40., SIGMA=1e-10)
+#client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
+client = None
+uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=40, origin=np.array([0., 0., 0.]), side_length=40., SIGMA=1e-10)
