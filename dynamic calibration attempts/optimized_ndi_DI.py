@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
 from queue import Queue
-#import pyigtl
+import pyigtl
 from sklearn.metrics.pairwise import rbf_kernel
 import sys
 from time import sleep
@@ -117,7 +117,7 @@ class CoilModel:
 
 global coil_model
 coil_model = CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
-                                      'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]})
+                                      'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]}) # mm
 
 def theoretical_field(model, point):
     return np.concatenate(model.coil_field_total(point[0], point[1], point[2]), axis=1).T # (3, 8)
@@ -234,7 +234,7 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
     az = fig.add_subplot(1, 3, 3, projection='3d')
     
     global cube
-    cube = cube_to_calib(origin=origin, side_length=side_length, sigma=SIGMA)
+    cube = cube_to_calib(origin=origin, side_length=side_length, sigma=SIGMA, point_density=20.)
     
     zline = cube.grid.T[2]
     yline = cube.grid.T[1]
@@ -328,8 +328,8 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
             
     global ani
     ani = FuncAnimation(plt.gcf(), animate, interval=interval)
-    plt.tight_layout()
+    #plt.tight_layout()
     
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
 #client = None
-uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=40, origin=np.array([0., 0., 0.]), side_length=40., SIGMA=1e-10)
+uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=40, origin=np.array([0., 0., 100.]), side_length=100., SIGMA=1e-10)
