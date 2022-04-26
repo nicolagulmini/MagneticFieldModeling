@@ -40,17 +40,13 @@ app.layout = html.Div(
 @app.callback(Output('live-update-graph', 'figure'),
               Input('interval-component', 'n_intervals'))
 def update_graph_live(n):
-        
-    # Create the graph with subplots
+    
     fig = make_subplots(rows=1, cols=3, specs=[[{'is_3d': True}, {'is_3d': True}, {'is_3d':True}]])
     
     fig.append_trace(go.Scatter3d(x=np.random.random(3), y=np.random.random(3), z=np.random.random(3)), 1, 1)
     fig.append_trace(go.Scatter3d(x=np.random.random(3), y=np.random.random(3), z=np.random.random(3)), 1, 2)
     fig.append_trace(go.Scatter3d(x=np.random.random(3), y=np.random.random(3), z=np.random.random(3)), 1, 3)
     
-    # fig.update_layout(scene_camera_eye=dict(x=2, y=2, z=2),
-    #                    scene2_camera_eye=dict(x=2, y=2, z=2),
-    #                    scene3_camera_eye=dict(x=2, y=2, z=2))
     return fig
 
 
