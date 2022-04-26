@@ -190,7 +190,7 @@ def get_theoretical_field(model, point, ori=None):
     if ori is None: return tmp # (3, 8)
     return np.dot(ori, tmp)    
 
-def calib_simulation(origin=np.array([0., 0., 50.]), side_length=40., AMOUNT_OF_NEW_POINTS=5, interval=100, EPSILON=1):
+def calib_simulation(origin=np.array([-100., -100., 50.]), side_length=200., AMOUNT_OF_NEW_POINTS=100, interval=300, EPSILON=1):
             
     plt.close('all')
     fig = plt.figure("Three components")
@@ -210,7 +210,7 @@ def calib_simulation(origin=np.array([0., 0., 50.]), side_length=40., AMOUNT_OF_
     def animate(k):
         
         while len(q.queue) < AMOUNT_OF_NEW_POINTS:
-            pos, ori = cube.side_length*np.random.random(3), np.random.random(3)
+            pos, ori = cube.origin_corner + cube.side_length*np.random.random(3), np.array([1., 0., 0.]) #np.random.random(3)
             tmp = get_theoretical_field(coil_model, pos, ori)
             q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
 
@@ -250,15 +250,15 @@ def calib_simulation(origin=np.array([0., 0., 50.]), side_length=40., AMOUNT_OF_
         c_y = cube.contributions.T[1][np.newaxis]
         c_z = cube.contributions.T[2][np.newaxis]
         
-        unc_x = 1.-max(c_x, 1) # risolvi sta roba
-        unc_y = 1.-max(c_y, 1)
-        unc_z = 1.-max(c_z, 1)
+        unc_x = 1.-np.minimum(c_x, np.ones(c_x.shape))
+        unc_y = 1.-np.minimum(c_y, np.ones(c_x.shape))
+        unc_z = 1.-np.minimum(c_z, np.ones(c_x.shape))
         
         color_vec_x = np.concatenate((unc_x, 1-unc_x, np.zeros(unc_x.shape)), axis=0).T
         color_vec_y = np.concatenate((unc_y, 1-unc_y, np.zeros(unc_y.shape)), axis=0).T
         color_vec_z = np.concatenate((unc_z, 1-unc_z, np.zeros(unc_z.shape)), axis=0).T
 
-        for i in np.arange(.1, 1., .2):
+        for i in np.arange(.1, 1., .3):
             ax.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_x)**2, alpha = .05/i, c = color_vec_x)
             ay.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_y)**2, alpha = .05/i, c = color_vec_y)
             az.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_z)**2, alpha = .05/i, c = color_vec_z)
