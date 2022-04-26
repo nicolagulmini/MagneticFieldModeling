@@ -9,6 +9,7 @@ from dash import dcc
 from dash import html
 
 x, y, z = np.mgrid[0:10, 0:10, 0:10]
+
 x = x.flatten()
 y = y.flatten()
 z = z.flatten()
