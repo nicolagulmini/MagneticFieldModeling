@@ -9,6 +9,7 @@ from dash.dependencies import Input, Output
 from plotly.subplots import make_subplots
 
 app = dash.Dash()
+
 app.layout = html.Div(
     html.Div([
         html.H4('Magnetic Field Freehand Calibration'),
@@ -16,8 +17,8 @@ app.layout = html.Div(
         dcc.Graph(id='live-update-graph'),
         dcc.Interval(
             id='interval-component',
-            interval=1*1000, # in milliseconds
-            n_intervals=0
+            interval = 1000, # ms
+            n_intervals = 0
         )
     ])
 )
@@ -39,7 +40,9 @@ app.layout = html.Div(
 # plots
 @app.callback(Output('live-update-graph', 'figure'),
               Input('interval-component', 'n_intervals'))
-def update_graph_live(n):
+def update_graph_live(n_intervals):
+    
+    print(n_intervals)
     
     fig = make_subplots(rows=1, cols=3, specs=[[{'is_3d': True}, {'is_3d': True}, {'is_3d':True}]])
     

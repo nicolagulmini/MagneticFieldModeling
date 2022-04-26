@@ -57,7 +57,7 @@ if __name__ == '__main__':
     t2.start()
     
     @app.callback(Output('live-update-graph', 'figure'),
-                  Input('interval-component', 'n_intervals', fig))
+                  Input('interval-component', 'n_intervals'))
     def update_graph_live(n):
         return fig
     
