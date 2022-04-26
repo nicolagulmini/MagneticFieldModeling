@@ -250,9 +250,9 @@ def calib_simulation(origin=np.array([0., 0., 50.]), side_length=40., AMOUNT_OF_
         c_y = cube.contributions.T[1][np.newaxis]
         c_z = cube.contributions.T[2][np.newaxis]
         
-        unc_x = 1-max(c_x, 1)
-        unc_y = 1./(1. + np.exp(c_y))
-        unc_z = 1./(1. + np.exp(c_z))
+        unc_x = 1.-max(c_x, 1) # risolvi sta roba
+        unc_y = 1.-max(c_y, 1)
+        unc_z = 1.-max(c_z, 1)
         
         color_vec_x = np.concatenate((unc_x, 1-unc_x, np.zeros(unc_x.shape)), axis=0).T
         color_vec_y = np.concatenate((unc_y, 1-unc_y, np.zeros(unc_y.shape)), axis=0).T
