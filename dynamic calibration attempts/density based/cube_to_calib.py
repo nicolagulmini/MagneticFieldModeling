@@ -26,6 +26,9 @@ class cube_to_calib:
                     grid[c] = np.array([k, j, i])
                     c += 1
         self.grid = grid
+        self.xline = self.grid.T[0]
+        self.yline = self.grid.T[1]
+        self.zline = self.grid.T[2]
         self.contributions = np.zeros((self.number_of_points_along_an_axis**3, 3)) # here the contributions of the sampled points in terms of the amount of covered volume
         # then it is sufficient to call self.contributions to obtain the "uncertainty" values
         
