@@ -33,7 +33,6 @@ def update():
     cube.add_batch(new_raw_points)
   
 
-
 ####################################################################################
 
 app = dash.Dash()
@@ -58,9 +57,6 @@ fig.add_trace(go.Scatter3d(x=xline, y=yline, z=zline, mode='markers', marker=dic
 fig.add_trace(go.Scatter3d(x=xline, y=yline, z=zline, mode='markers', marker=dict(size=(60*i*unc_y)**2, color=color_vec_y, colorscale=color_scale, opacity=.5)), 1, 2)    
 fig.add_trace(go.Scatter3d(x=xline, y=yline, z=zline, mode='markers', marker=dict(size=(60*i*unc_z)**2, color=color_vec_z, colorscale=color_scale, opacity=.5)), 1, 3)
 
-
-
-
 # plot sensor
 #fig.add_trace(go.Scatter3d())
 
@@ -73,8 +69,6 @@ fig.add_trace(go.Scatter3d(x=xline, y=yline, z=zline, mode='markers', marker=dic
       
 
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), showlegend=True, uirevision='_')
-
-
 
 @app.callback(Output('plot', 'figure'),
               Input('interval-component', 'n_intervals'))
