@@ -4,6 +4,7 @@ import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
+import plotly.figure_factory as ff
 from plotly.subplots import make_subplots
 import cube_to_calib as CubeModel
 import CoilModel as Coil
@@ -23,9 +24,15 @@ def get_theoretical_field(model, point, ori=None):
     if ori is None: return tmp # (3, 8)
     return np.dot(ori, tmp)  
 
+
 app = dash.Dash()
-app.layout = html.Div(html.Div([html.H4('Magnetic Field Freehand Calibration'),
-                                # html.Div(id='live-update-text'),
+app.layout = html.Div(html.Div(children=[html.H1('Magnetic Field Freehand Calibration',
+                                        style={'textAlign': 'center',
+                                               'color': '#009BAC',
+                                               'font-family': 'monospace'
+                                               }
+                                        ),
+                                html.Div(id='live-update-text'),
                                 dcc.Graph(id='plot'),
                                 dcc.Interval(id='interval-component',
                                              interval = 1000, # ms
@@ -38,19 +45,18 @@ color_scale = [[.0, '#27FF00'], [.5, '#FFF700'], [1.0, '#FF2D00']]
 
 c = np.zeros(cube.xline.shape[0])
 
-# qui metti tutto a zero e' solo per inizializzare
+# initialization
 fig.add_trace(go.Scatter3d(x=cube.xline, y=cube.yline, z=cube.zline, mode='markers',
                            marker=dict(size=c, color=c, colorscale=color_scale, opacity=.3), 
-                           name='x component'), 1, 1)
+                           name='x component', text='test'), 1, 1)
 fig.add_trace(go.Scatter3d(x=cube.xline, y=cube.yline, z=cube.zline, mode='markers',
                            marker=dict(size=c, color=c, colorscale=color_scale, opacity=.3), 
-                           name='y component'), 1, 2)
+                           name='y component', text='test'), 1, 2)
 fig.add_trace(go.Scatter3d(x=cube.xline, y=cube.yline, z=cube.zline, mode='markers',
                            marker=dict(size=c, color=c, colorscale=color_scale, opacity=.3), 
-                           name='z component'), 1, 3)
+                           name='z component', text='test'), 1, 3)
 
-# plot sensor
-#fig.add_trace(go.Scatter3d())
+fig.add_trace(ff.create_quiver(), 1, 1)
 
 # pos_sensor = np.flip(new_raw_points[:, :6], 0)[:, :3]
 # or_sensor = np.flip(new_raw_points[:, :6], 0)[:, 3:]
@@ -59,20 +65,22 @@ fig.add_trace(go.Scatter3d(x=cube.xline, y=cube.yline, z=cube.zline, mode='marke
 # ay.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
 # az.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
       
-fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), showlegend=True, uirevision='_')
+fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), showlegend=False, uirevision='_')
+fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
+print(fig)
 
 @app.callback(Output('plot', 'figure'),
               Input('interval-component', 'n_intervals'))
 def update_graph_live(n_intervals):
     
     while len(q.queue) < AMOUNT_OF_NEW_POINTS:
-        pos, ori = cube.origin_corner + cube.side_length*np.random.random(3), np.random.random(3)
+        pos, ori = cube.origin_corner + cube.side_length*np.random.random(3), np.array([1., 0., 0.]) #np.random.random(3)
         tmp = get_theoretical_field(coil_model, pos, ori)
         q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
     new_raw_points = np.array([q.get() for _ in range(AMOUNT_OF_NEW_POINTS)])
     cube.add_batch(new_raw_points)
 
-    # # cube is global
+    # cube is global
     c_x, c_y, c_z = cube.contributions.T
 
     unc_x = 1.-np.minimum(c_x, np.ones(c_x.shape))
@@ -86,8 +94,20 @@ def update_graph_live(n_intervals):
     fig['data'][1]['marker']['size'] = 10
     fig['data'][2]['marker']['color'] = unc_z
     fig['data'][2]['marker']['size'] = 10
-    
+        
     return fig
+
+@app.callback(Output('live-update-text', 'children'),
+              Input('interval-component', 'n_intervals'))
+def update_metrics(n):
+    c_x, c_y, c_z = cube.contributions.T 
+    perc_coverage_x = round(float(sum(np.minimum(c_x, np.ones(c_x.shape)))/c_x.shape)*100, 2)
+    perc_coverage_y = round(float(sum(np.minimum(c_y, np.ones(c_y.shape)))/c_y.shape)*100, 2)
+    perc_coverage_z = round(float(sum(np.minimum(c_z, np.ones(c_z.shape)))/c_z.shape)*100, 2)
+    return [html.H2("coverage x: "+str(perc_coverage_x)+"%", style={'textAlign': 'left', 'color': '#009BAC', 'font-family': 'monospace', 'padding': '5px', 'fontSize': '16px'}),
+            html.H2("coverage y: "+str(perc_coverage_y)+"%", style={'textAlign': 'left', 'color': '#009BAC', 'font-family': 'monospace', 'padding': '5px', 'fontSize': '16px'}),
+            html.H2("coverage z: "+str(perc_coverage_z)+"%", style={'textAlign': 'left', 'color': '#009BAC', 'font-family': 'monospace', 'padding': '5px', 'fontSize': '16px'}),
+            ]
 
 webbrowser.open('http://127.0.0.1:8050/', new=2)
 app.run_server(debug=True, use_reloader=False)
