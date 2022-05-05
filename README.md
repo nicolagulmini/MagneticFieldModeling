@@ -41,3 +41,15 @@ and the following plot shows the correlation between the nMAE and the standard d
 Taking into account also the orientation information, and with the uniaxial measures (one-dimensional measures of the magnetic field instead of the three components, allowing a smaller sensor), it is possible to interpolate the magnetic field changing the definition of the radial basis function. 
 
 ![diag results](https://user-images.githubusercontent.com/62892813/157286164-9d806e2a-c2cf-4332-afda-797c6aa9cbaa.png)
+
+## Calibration
+These algorithms are useful to calibrate the instrument. Collecting sensor's data it is possible to obtain a map of the static magnetic field, and the real time feedback from the program is useful to understand which area has to be covered during the sampling.
+This is the first interface of the program:
+
+![interface](https://user-images.githubusercontent.com/62892813/166935564-95d033ca-14cd-4cbd-9d26-7ae9cad18cb2.JPG)
+
+in which:
+- each cube shows a fixed grid of points from red to green, that means not-covered and well-covered, respectively
+- the position and orientation of the sensor are shown as a cone in each cube
+- the first cube shows the uncertainty relative to the x-component of the field, the second cube is relative to the y-component, and the third is for z
+- each cube is independent in terms of visualization, so it is possible to zoom, move and rotate them as you want, even during the sampling.
