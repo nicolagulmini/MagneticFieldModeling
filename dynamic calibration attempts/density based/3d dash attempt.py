@@ -55,22 +55,10 @@ fig.add_trace(go.Scatter3d(x=cube.xline, y=cube.yline, z=cube.zline, mode='marke
 fig.add_trace(go.Scatter3d(x=cube.xline, y=cube.yline, z=cube.zline, mode='markers',
                            marker=dict(size=c, color=c, colorscale=color_scale, opacity=.3), 
                            name='z component', text='test'), 1, 3)
-
-# fig.add_trace(ff.create_quiver(), 1, 1)
-
-# pos_sensor = np.flip(new_raw_points[:, :6], 0)[:, :3]
-# or_sensor = np.flip(new_raw_points[:, :6], 0)[:, 3:]
-
-# ax.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
-# ay.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
-# az.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
-      
-random_quiver_pos = cube.origin_corner + cube.side_length*np.random.random(3)
-random_quiver_pos = random_quiver_pos[:,np.newaxis]
-
-fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[cube.origin_corner[2]], u=[1], v=[0], w=[0], sizemode="absolute", sizeref=10, anchor="tip", showscale=False))
-fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[cube.origin_corner[2]], u=[0], v=[1], w=[0], sizemode="absolute", sizeref=10, anchor="tip", showscale=False))
-fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[cube.origin_corner[2]], u=[0], v=[0], w=[1], sizemode="absolute", sizeref=10, anchor="tip", showscale=False))
+     
+fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[cube.origin_corner[2]], u=[1], v=[0], w=[0], sizemode="absolute", sizeref=10, anchor="tip", showscale=False), 1, 1)
+fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[cube.origin_corner[2]], u=[0], v=[1], w=[0], sizemode="absolute", sizeref=10, anchor="tip", showscale=False), 1, 2)
+fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[cube.origin_corner[2]], u=[0], v=[0], w=[1], sizemode="absolute", sizeref=10, anchor="tip", showscale=False), 1, 3)
 
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), showlegend=False, uirevision='_')
 fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
@@ -83,6 +71,7 @@ def update_graph_live(n_intervals):
     
     while len(q.queue) < AMOUNT_OF_NEW_POINTS:
         pos, ori = cube.origin_corner + cube.side_length*np.random.random(3), np.random.random(3)
+        # collect the points from the generated dataset
         
         fig['data'][3]['x'] = [pos[0]]
         fig['data'][3]['y'] = [pos[1]]
