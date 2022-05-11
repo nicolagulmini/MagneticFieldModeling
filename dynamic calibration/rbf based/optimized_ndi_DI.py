@@ -224,7 +224,7 @@ class cube_to_calib:
         self.interpolator.update_kernel(new_points, new_measures)
         return self.interpolator.uncertainty(new_points, new_measures)
 
-def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3)**2, interval=300, EPSILON=1, AMOUNT_OF_NEW_POINTS=15):
+def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3)**2, interval=100, EPSILON=1, AMOUNT_OF_NEW_POINTS=15):
     # EPSILON is mm of tolerance for the visualization of the cube
             
     plt.close('all')
@@ -244,48 +244,48 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
     
     def animate(k):
         
+        ax.clear()
+        ax.set_title("\nx component")
+        ax.set_xlabel("x (mm)")
+        ax.set_ylabel("y (mm)")
+        ax.set_zlabel("z (mm)")
+        ax.set_xlim(cube.origin_corner[0]-EPSILON, cube.origin_corner[0]+cube.side_length+EPSILON)
+        ax.set_ylim(cube.origin_corner[1]-EPSILON, cube.origin_corner[1]+cube.side_length+EPSILON)
+        ax.set_zlim(cube.origin_corner[2]-EPSILON, cube.origin_corner[2]+cube.side_length+EPSILON)
+        
+        ay.clear()
+        ay.set_title("\ny component")
+        ay.set_xlabel("x (mm)")
+        ay.set_ylabel("y (mm)")
+        ay.set_zlabel("z (mm)")
+        ay.set_xlim(cube.origin_corner[0]-EPSILON, cube.origin_corner[0]+cube.side_length+EPSILON)
+        ay.set_ylim(cube.origin_corner[1]-EPSILON, cube.origin_corner[1]+cube.side_length+EPSILON)
+        ay.set_zlim(cube.origin_corner[2]-EPSILON, cube.origin_corner[2]+cube.side_length+EPSILON)
+        
+        az.clear()
+        az.set_title("\nz component")
+        az.set_xlabel("x (mm)")
+        az.set_ylabel("y (mm)")
+        az.set_zlabel("z (mm)")
+        az.set_xlim(cube.origin_corner[0]-EPSILON, cube.origin_corner[0]+cube.side_length+EPSILON)
+        az.set_ylim(cube.origin_corner[1]-EPSILON, cube.origin_corner[1]+cube.side_length+EPSILON)
+        az.set_zlim(cube.origin_corner[2]-EPSILON, cube.origin_corner[2]+cube.side_length+EPSILON)
+        
         for _ in range(AMOUNT_OF_NEW_POINTS):
             message = client.wait_for_message("SensorTipToFG", timeout=5)
             if message is not None:
-            #if True:
                 pos = message.matrix.T[3][:3]
                 ori = message.matrix.T[2][:3]
-                #pos, ori = cube.side_length*np.random.random(3), np.random.random(3)
                 tmp = np.dot(ori, theoretical_field(coil_model, pos))
                 q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
+                ax.quiver(pos[0], pos[1], pos[2], 7*ori[0], 7*ori[1], 7*ori[2], color='blue')
+                ay.quiver(pos[0], pos[1], pos[2], 7*ori[0], 7*ori[1], 7*ori[2], color='blue')
+                az.quiver(pos[0], pos[1], pos[2], 7*ori[0], 7*ori[1], 7*ori[2], color='blue')
 
         if len(q.queue) >= AMOUNT_OF_NEW_POINTS: 
 
             new_raw_points = np.array([q.get() for _ in range(AMOUNT_OF_NEW_POINTS)])
-            
-            # and everytime it is necessary to reset the settings of the plot
-            ax.clear()
-            ax.set_title("\nx component")
-            ax.set_xlabel("x (mm)")
-            ax.set_ylabel("y (mm)")
-            ax.set_zlabel("z (mm)")
-            ax.set_xlim(cube.origin_corner[0]-EPSILON, cube.origin_corner[0]+cube.side_length+EPSILON)
-            ax.set_ylim(cube.origin_corner[1]-EPSILON, cube.origin_corner[1]+cube.side_length+EPSILON)
-            ax.set_zlim(cube.origin_corner[2]-EPSILON, cube.origin_corner[2]+cube.side_length+EPSILON)
-            
-            ay.clear()
-            ay.set_title("\ny component")
-            ay.set_xlabel("x (mm)")
-            ay.set_ylabel("y (mm)")
-            ay.set_zlabel("z (mm)")
-            ay.set_xlim(cube.origin_corner[0]-EPSILON, cube.origin_corner[0]+cube.side_length+EPSILON)
-            ay.set_ylim(cube.origin_corner[1]-EPSILON, cube.origin_corner[1]+cube.side_length+EPSILON)
-            ay.set_zlim(cube.origin_corner[2]-EPSILON, cube.origin_corner[2]+cube.side_length+EPSILON)
-            
-            az.clear()
-            az.set_title("\nz component")
-            az.set_xlabel("x (mm)")
-            az.set_ylabel("y (mm)")
-            az.set_zlabel("z (mm)")
-            az.set_xlim(cube.origin_corner[0]-EPSILON, cube.origin_corner[0]+cube.side_length+EPSILON)
-            az.set_ylim(cube.origin_corner[1]-EPSILON, cube.origin_corner[1]+cube.side_length+EPSILON)
-            az.set_zlim(cube.origin_corner[2]-EPSILON, cube.origin_corner[2]+cube.side_length+EPSILON)
-            
+                        
             new_points = new_raw_points[:, :6] # shape = (AMOUNT_OF_NEW_POINTS, 6)
             new_measures = new_raw_points[:, 6:] # shape = (AMOUNT_OF_NEW_POINTS, 8)
             unc = cube.update_uncert_vis(new_points, new_measures)
@@ -305,26 +305,15 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
                 ax.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_x_)**2, alpha = .05/i, c = color_vec_x)
                 ay.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_y_)**2, alpha = .05/i, c = color_vec_y)
                 az.scatter3D(xline, yline, zline, lw = 0, s = (60*i*unc_z_)**2, alpha = .05/i, c = color_vec_z)
-                
-            pos_sensor = np.flip(new_points, 0)[:, :3]
-            or_sensor = np.flip(new_points, 0)[:, 3:]
-
-            ax.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
-            ay.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
-            az.quiver(pos_sensor[0][0], pos_sensor[0][1], pos_sensor[0][2], 7*or_sensor[0][0], 7*or_sensor[0][1], 7*or_sensor[0][2], color='blue')
-            
-            # test:
-                
+                            
             #if cube.interpolator.w is not None:
             #    if cube.interpolator.w.shape[0] % AMOUNT_OF_NEW_POINTS == 0:
             cube.interpolator.set_weights()
             grid_field = cube.interpolator.predict()
 
-            tmp = theoretical_field(coil_model, cube.grid[0])
-            first_coil_field_theoretical = np.array([tmp[0].A1[0], tmp[1].A1[0], tmp[2].A1[0]])
-            grid_field_predicted = np.array([grid_field[0][0], grid_field[0+125][0], grid_field[0+125*2][0]])
-            print('theoretical field:', first_coil_field_theoretical)
-            print('predicted field:', grid_field_predicted)
+            # tmp = theoretical_field(coil_model, cube.grid[0])
+            # first_coil_field_theoretical = np.array([tmp[0].A1[0], tmp[1].A1[0], tmp[2].A1[0]])
+            # grid_field_predicted = np.array([grid_field[0][0], grid_field[0+125][0], grid_field[0+125*2][0]])
             
     global ani
     ani = FuncAnimation(plt.gcf(), animate, interval=interval)
@@ -332,4 +321,4 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
     
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
 #client = None
-uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=40, origin=np.array([0., 0., 100.]), side_length=100., SIGMA=1e-10)
+uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=10, origin=np.array([0., 0., 100.]), side_length=100., SIGMA=1e-10)
