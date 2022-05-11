@@ -10,10 +10,12 @@ import cube_to_calib as CubeModel
 import CoilModel as Coil
 from queue import Queue
 import time
+import pyigtl
 
 AMOUNT_OF_NEW_POINTS = 10
+print("Press CTRL+C when satisfied about the amount of gathered points. Suddenly the interpolation will be computed and the data will be stored in a .csv file.")
 
-global q, cube, coil_model
+global q, cube, coil_model, client
 q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
 cube = CubeModel.cube_to_calib(np.array([-25., 25., 5.]), side_length=50., point_density=10., minimum_number_of_points=5)
 coil_model = Coil.CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
@@ -35,7 +37,7 @@ app.layout = html.Div(html.Div(children=[html.H1('Magnetic Field Freehand Calibr
                                 html.Div(id='live-update-text'),
                                 dcc.Graph(id='plot'),
                                 dcc.Interval(id='interval-component',
-                                             interval = 100, # ms
+                                             interval = 25, # ms
                                              n_intervals = 0)
                                 ]))
 
@@ -63,13 +65,25 @@ fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[c
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), showlegend=False, uirevision='_')
 fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
 
+client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
+
 @app.callback(Output('plot', 'figure'),
               Input('interval-component', 'n_intervals'))
 def update_graph_live(n_intervals):
     
     if len(q.queue) < AMOUNT_OF_NEW_POINTS:
+        
+        # random
         pos, ori = cube.origin_corner + cube.side_length*np.random.random(3), np.random.random(3)
+        
         # collect the points from the generated dataset
+        # ...
+        
+        # from the instrument
+        # message = client.wait_for_message("SensorTipToFG", timeout=5)
+        # pos = message.matrix.T[3][:3]
+        # ori = message.matrix.T[2][:3]
+        # tmp = get_theoretical_field(coil_model, pos, ori)
         
         fig['data'][3]['x'] = [pos[0]]
         fig['data'][3]['y'] = [pos[1]]
@@ -132,4 +146,7 @@ def update_metrics(n):
 webbrowser.open('http://127.0.0.1:8050/', new=2)
 app.run_server(debug=True, use_reloader=False)
 
-print()
+# save points in a .csv file and interpolate
+pred, unc = cube.interpolation()
+np.savetxt('predictions.csv', pred)
+np.savetxt('unceratinty.csv', unc)

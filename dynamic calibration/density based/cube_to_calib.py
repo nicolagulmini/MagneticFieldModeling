@@ -1,4 +1,5 @@
 import numpy as np
+import crbfi
 
 class cube_to_calib:
     
@@ -9,6 +10,9 @@ class cube_to_calib:
         
         self.points = np.array([]) # shape = (number of points, 6), which means 3 for position and 3 for orientation
         self.measures = np.array([]) # shape = (number of points, 8), which means one measure per coil
+        
+        self.gamma = gamma
+        self.sigma = sigma
         
         self.side_length = side_length # in millimiters
         self.minimum_number_of_points = minimum_number_of_points # needed points to consider a grid point properly covered, along an orientation
@@ -62,4 +66,5 @@ class cube_to_calib:
         # define an interpolator which could be trained at the end of the calibration, with the gathered points
         # could be an rbf or a gaussian process or a neural network...
         # notice that sigma and gamma are already defined
-        return
+        self.interpolator = crbfi.custom_radial_basis_function_interpolator(gamma=self.gamma, sigma=self.sigma, points=self.points, measures=self.measures, stack_grid=self.stack_grid)
+        return self.interpolator.predict(), self.interpolator.uncertainty()
