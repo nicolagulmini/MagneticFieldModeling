@@ -11,7 +11,7 @@ import CoilModel as Coil
 from queue import Queue
 import time
 
-AMOUNT_OF_NEW_POINTS = 50
+AMOUNT_OF_NEW_POINTS = 10
 
 global q, cube, coil_model
 q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
@@ -35,7 +35,7 @@ app.layout = html.Div(html.Div(children=[html.H1('Magnetic Field Freehand Calibr
                                 html.Div(id='live-update-text'),
                                 dcc.Graph(id='plot'),
                                 dcc.Interval(id='interval-component',
-                                             interval = 1000, # ms
+                                             interval = 100, # ms
                                              n_intervals = 0)
                                 ]))
 
@@ -56,20 +56,18 @@ fig.add_trace(go.Scatter3d(x=cube.xline, y=cube.yline, z=cube.zline, mode='marke
                            marker=dict(size=c, color=c, colorscale=color_scale, opacity=.3), 
                            name='z component', text='test'), 1, 3)
      
-fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[cube.origin_corner[2]], u=[1], v=[0], w=[0], sizemode="absolute", sizeref=10, anchor="tip", showscale=False), 1, 1)
-fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[cube.origin_corner[2]], u=[0], v=[1], w=[0], sizemode="absolute", sizeref=10, anchor="tip", showscale=False), 1, 2)
-fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[cube.origin_corner[2]], u=[0], v=[0], w=[1], sizemode="absolute", sizeref=10, anchor="tip", showscale=False), 1, 3)
+fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[cube.origin_corner[2]], u=[1], v=[0], w=[0], sizemode="absolute", sizeref=10, anchor="tip", showscale=False, colorscale=[[0, 'rgb(0,0,255)'], [1, 'rgb(0,0,255)']]), 1, 1)
+fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[cube.origin_corner[2]], u=[0], v=[1], w=[0], sizemode="absolute", sizeref=10, anchor="tip", showscale=False, colorscale=[[0, 'rgb(0,0,255)'], [1, 'rgb(0,0,255)']]), 1, 2)
+fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[cube.origin_corner[2]], u=[0], v=[0], w=[1], sizemode="absolute", sizeref=10, anchor="tip", showscale=False, colorscale=[[0, 'rgb(0,0,255)'], [1, 'rgb(0,0,255)']]), 1, 3)
 
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), showlegend=False, uirevision='_')
 fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
-
-print(fig)
 
 @app.callback(Output('plot', 'figure'),
               Input('interval-component', 'n_intervals'))
 def update_graph_live(n_intervals):
     
-    while len(q.queue) < AMOUNT_OF_NEW_POINTS:
+    if len(q.queue) < AMOUNT_OF_NEW_POINTS:
         pos, ori = cube.origin_corner + cube.side_length*np.random.random(3), np.random.random(3)
         # collect the points from the generated dataset
         
@@ -96,6 +94,9 @@ def update_graph_live(n_intervals):
         
         tmp = get_theoretical_field(coil_model, pos, ori)
         q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
+        
+        return fig
+        
     new_raw_points = np.array([q.get() for _ in range(AMOUNT_OF_NEW_POINTS)])
     cube.add_batch(new_raw_points)
 
@@ -130,3 +131,5 @@ def update_metrics(n):
 
 webbrowser.open('http://127.0.0.1:8050/', new=2)
 app.run_server(debug=True, use_reloader=False)
+
+print()
