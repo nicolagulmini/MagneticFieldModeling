@@ -97,6 +97,10 @@ if os.path.exists('./sampled_points.csv'):
 
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
 
+message = client.wait_for_message("ReferenceToBoard", timeout=5)
+referenceToBoard = message.matrix 
+print(referenceToBoard)
+
 @app.callback(Output('plot', 'figure'),
               Input('interval-component', 'n_intervals'))
 def update_graph_live(n_intervals):
@@ -110,7 +114,8 @@ def update_graph_live(n_intervals):
         # ...
         
         # from the instrument
-        message = client.wait_for_message("SensorTipToFG", timeout=5)
+        message = client.wait_for_message("SensorToReference", timeout=5)
+        print(message)
         # pos = message.matrix.T[3][:3]
         mat = np.matmul(message.matrix, DrfToAxis7)
         # ori = message.matrix.T[2][:3]
