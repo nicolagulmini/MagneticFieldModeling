@@ -11,6 +11,7 @@ import CoilModel as Coil
 from queue import Queue
 import time
 import pyigtl
+import os
 
 AMOUNT_OF_NEW_POINTS = 10
 print("Press CTRL+C when satisfied about the amount of gathered points. Suddenly the interpolation will be computed and the data will be stored in a .csv file.")
@@ -45,9 +46,8 @@ fig = make_subplots(horizontal_spacing=0.01, rows=1, cols=3, specs=[[{'is_3d': T
 
 color_scale = [[.0, '#27FF00'], [.5, '#FFF700'], [1.0, '#FF2D00']]
 
-c = np.zeros(cube.xline.shape[0])
+c = np.zeros(cube.xline.shape[0])   
 
-# initialization
 fig.add_trace(go.Scatter3d(x=cube.xline, y=cube.yline, z=cube.zline, mode='markers',
                            marker=dict(size=c, color=c, colorscale=color_scale, opacity=.3), 
                            name='x component', text='test'), 1, 1)
@@ -64,6 +64,22 @@ fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[c
 
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), showlegend=False, uirevision='_')
 fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
+
+if os.path.exists('./sampled_points.csv'):
+    cube.add_batch(np.loadtxt('sampled_points.csv'))
+    c_x, c_y, c_z = cube.contributions.T
+    
+    unc_x = 1.-np.minimum(c_x, np.ones(c_x.shape))
+    unc_y = 1.-np.minimum(c_y, np.ones(c_x.shape))
+    unc_z = 1.-np.minimum(c_z, np.ones(c_x.shape))
+    
+    # update markers' sizes and colors
+    fig['data'][0]['marker']['color'] = unc_x
+    fig['data'][0]['marker']['size'] = 10
+    fig['data'][1]['marker']['color'] = unc_y
+    fig['data'][1]['marker']['size'] = 10
+    fig['data'][2]['marker']['color'] = unc_z
+    fig['data'][2]['marker']['size'] = 10
 
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
 
@@ -145,6 +161,9 @@ def update_metrics(n):
 
 webbrowser.open('http://127.0.0.1:8050/', new=2)
 app.run_server(debug=True, use_reloader=False)
+
+# save state of the cube in case of interrpution
+np.savetxt('sampled_points.csv', cube.points)
 
 # save points in a .csv file and interpolate
 pred, unc = cube.interpolation()
