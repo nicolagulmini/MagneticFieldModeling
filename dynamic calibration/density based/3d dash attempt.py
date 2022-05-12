@@ -13,6 +13,20 @@ import time
 import pyigtl
 import os
 
+DrfToAxis7 = np.array([
+    [1,	0,					-0.0349154595874112,	-8.54323644559691],
+    [0,	0.0213641235902639,	0.999162169684586,	1.90874592349076],
+    [0,	0.999771761065104,	-0.0213510972315487,	-4.35779932552848],
+    [0,	0,					0,					1]
+    ])
+
+DrfToAxis8 = np.array([
+    [1,	0,					0.00949848325487834,	-8.56564514087011],
+    [0,	-0.999786950137733,	-0.0206401524985414,	-4.34460054830087],
+    [0,	-0.0206410836510488,	0.999741848139155,	1.25091495264286],
+    [0,	0,                  0,                   1]
+    ])
+
 AMOUNT_OF_NEW_POINTS = 10
 print("Press CTRL+C when satisfied about the amount of gathered points. Suddenly the interpolation will be computed and the data will be stored in a .csv file.")
 
@@ -90,16 +104,19 @@ def update_graph_live(n_intervals):
     if len(q.queue) < AMOUNT_OF_NEW_POINTS:
         
         # random
-        pos, ori = cube.origin_corner + cube.side_length*np.random.random(3), np.random.random(3)
+        # pos, ori = cube.origin_corner + cube.side_length*np.random.random(3), np.random.random(3)
         
         # collect the points from the generated dataset
         # ...
         
         # from the instrument
-        # message = client.wait_for_message("SensorTipToFG", timeout=5)
+        message = client.wait_for_message("SensorTipToFG", timeout=5)
         # pos = message.matrix.T[3][:3]
+        mat = np.matmul(message.matrix, DrfToAxis7)
         # ori = message.matrix.T[2][:3]
-        # tmp = get_theoretical_field(coil_model, pos, ori)
+        pos = mat.T[3][:3]
+        ori = mat.T[2][:3]
+        tmp = get_theoretical_field(coil_model, pos, ori)
         
         fig['data'][3]['x'] = [pos[0]]
         fig['data'][3]['y'] = [pos[1]]
