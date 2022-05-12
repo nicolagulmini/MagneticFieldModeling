@@ -163,7 +163,7 @@ webbrowser.open('http://127.0.0.1:8050/', new=2)
 app.run_server(debug=True, use_reloader=False)
 
 # save state of the cube in case of interrpution
-np.savetxt('sampled_points.csv', cube.points)
+np.savetxt('sampled_points.csv', np.concatenate((cube.points, cube.measures), 1))
 
 # save points in a .csv file and interpolate
 pred, unc = cube.interpolation()
