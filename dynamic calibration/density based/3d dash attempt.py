@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 import plotly.figure_factory as ff
 from plotly.subplots import make_subplots
 import cube_to_calib as CubeModel
+from nidaq import NIDAQ
 import CoilModel as Coil
 from queue import Queue
 import time
@@ -27,6 +28,25 @@ DrfToAxis8 = np.array([
     [0,	0,                  0,                   1]
     ])
 
+channeldict = {0: 4, 1: 0, 2: 8, 3: 1, 4: 9, 5: 2, 6: 10, 7: 11, 8: 3, 9: 8, 10: 12, 11: 13, 12: 5, 13: 14, 14: 6, 15: 15, 16: 7}
+sampleFreq = 40000
+noSamples = 4000
+freqs = np.array([6000, 6200, 6400, 6600, 6800, 7000, 7200, 7400])
+idx_signal = freqs/sampleFreq*noSamples+1
+idx_signal = idx_signal.astype(int)
+deviceID = 'Dev1'
+sensor_channel = 7
+sensor_channel = channeldict[sensor_channel]
+PhaseOffset = 0
+
+task = NIDAQ(dev_name = deviceID, channels = np.array([4, str(sensor_channel)]), sampleFreq = sampleFreq, data_len = noSamples)
+task.SetAnalogInputs()
+task.StartTask()
+
+task1 = NIDAQ(dev_name=deviceID)
+task1.SetClockOutput()
+task1.StartTask()
+
 AMOUNT_OF_NEW_POINTS = 10
 print("Press CTRL+C when satisfied about the amount of gathered points. Suddenly the interpolation will be computed and the data will be stored in a .csv file.")
 
@@ -41,6 +61,24 @@ def get_theoretical_field(model, point, ori=None):
     if ori is None: return tmp # (3, 8)
     return np.dot(ori, tmp)  
 
+def get_fft(idx_signal):
+    ft = task.get_data_matrix(timeout = 10.0)
+    yf = np.fft.fft(ft, axis = 0) / noSamples
+    yf = yf[idx_signal, :]
+    return yf
+    
+def get_flux(yf, PhaseOffset):
+    yf_mag = 2 * abs(yf[:, 1])
+    yf_phase = np.angle(yf)
+    angleSignal = yf_phase[:, 0] - yf_phase[:, 1] + PhaseOffset
+    flux = np.sin(angleSignal) * yf_mag    
+    return flux
+    
+def produce_basis_vectors_for_prediction(n):
+    to_pred_x = np.array([np.ones(shape=(n)), np.zeros(shape=(n)), np.zeros(shape=(n))])
+    to_pred_y = np.array([np.zeros(shape=(n)), np.ones(shape=(n)), np.zeros(shape=(n))])
+    to_pred_z = np.array([np.zeros(shape=(n)), np.zeros(shape=(n)), np.ones(shape=(n))])
+    return to_pred_x, to_pred_y, to_pred_z
 
 app = dash.Dash()
 app.layout = html.Div(html.Div(children=[html.H1('Magnetic Field Freehand Calibration',
@@ -106,20 +144,16 @@ def update_graph_live(n_intervals):
     
     if len(q.queue) < AMOUNT_OF_NEW_POINTS:
         
-        # random
-        # pos, ori = cube.origin_corner + cube.side_length*np.random.random(3), np.random.random(3)
-        
-        # collect the points from the generated dataset
-        # ...
-        
         # from the instrument
         message = client.wait_for_message("SensorToReference", timeout=5)
+        
         # pos = message.matrix.T[3][:3]
-        mat = np.matmul(np.matmul(referenceToBoard, message.matrix), DrfToAxis7)
         # ori = message.matrix.T[2][:3]
+        # tmp = get_theoretical_field(coil_model, pos, ori)
+        
+        mat = np.matmul(np.matmul(referenceToBoard, message.matrix), DrfToAxis7)
         pos = mat.T[3][:3]
         ori = mat.T[2][:3]
-        # tmp = get_theoretical_field(coil_model, pos, ori)
         
         fig['data'][3]['x'] = [pos[0]]
         fig['data'][3]['y'] = [pos[1]]
@@ -142,8 +176,9 @@ def update_graph_live(n_intervals):
         fig['data'][5]['v'] = [ori[1]]
         fig['data'][5]['w'] = [ori[2]]        
         
-        tmp = get_theoretical_field(coil_model, pos, ori)
-        q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
+        #q.put(np.concatenate((pos, ori, tmp.A1), axis=0)) # 
+        tmp = get_flux(get_fft(idx_signal), PhaseOffset)
+        q.put(np.concatenate((pos, ori, tmp), axis=0))
         
         return fig
         
