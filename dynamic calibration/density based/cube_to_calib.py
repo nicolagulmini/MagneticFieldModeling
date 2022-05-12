@@ -63,8 +63,5 @@ class cube_to_calib:
             self.measures = np.concatenate((self.measures, new_measures))
     
     def interpolation(self):
-        # define an interpolator which could be trained at the end of the calibration, with the gathered points
-        # could be an rbf or a gaussian process or a neural network...
-        # notice that sigma and gamma are already defined
         self.interpolator = crbfi.custom_radial_basis_function_interpolator(gamma=self.gamma, sigma=self.sigma, points=self.points, measures=self.measures, stack_grid=self.stack_grid)
         return self.interpolator.predict(), self.interpolator.uncertainty()
