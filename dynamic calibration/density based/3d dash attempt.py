@@ -32,7 +32,7 @@ print("Press CTRL+C when satisfied about the amount of gathered points. Suddenly
 
 global q, cube, coil_model, client
 q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
-cube = CubeModel.cube_to_calib(np.array([-25., 25., 5.]), side_length=50., point_density=10., minimum_number_of_points=5)
+cube = CubeModel.cube_to_calib(np.array([-50., -50., 50.]), side_length=100., point_density=10., minimum_number_of_points=1)
 coil_model = Coil.CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
                                       'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]}) # mm
 
@@ -58,7 +58,7 @@ app.layout = html.Div(html.Div(children=[html.H1('Magnetic Field Freehand Calibr
 
 fig = make_subplots(horizontal_spacing=0.01, rows=1, cols=3, specs=[[{'is_3d': True}, {'is_3d': True}, {'is_3d':True}]])
 
-color_scale = [[.0, '#27FF00'], [.5, '#FFF700'], [1.0, '#FF2D00']]
+color_scale = [[0., '#27FF00'], [.5, '#FFF700'], [1., '#FF2D00']]
 
 c = np.zeros(cube.xline.shape[0])   
 
@@ -99,7 +99,6 @@ client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
 
 message = client.wait_for_message("ReferenceToBoard", timeout=5)
 referenceToBoard = message.matrix 
-print(referenceToBoard)
 
 @app.callback(Output('plot', 'figure'),
               Input('interval-component', 'n_intervals'))
@@ -115,13 +114,12 @@ def update_graph_live(n_intervals):
         
         # from the instrument
         message = client.wait_for_message("SensorToReference", timeout=5)
-        print(message)
         # pos = message.matrix.T[3][:3]
-        mat = np.matmul(message.matrix, DrfToAxis7)
+        mat = np.matmul(np.matmul(referenceToBoard, message.matrix), DrfToAxis7)
         # ori = message.matrix.T[2][:3]
         pos = mat.T[3][:3]
         ori = mat.T[2][:3]
-        tmp = get_theoretical_field(coil_model, pos, ori)
+        # tmp = get_theoretical_field(coil_model, pos, ori)
         
         fig['data'][3]['x'] = [pos[0]]
         fig['data'][3]['y'] = [pos[1]]

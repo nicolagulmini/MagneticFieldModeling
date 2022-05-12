@@ -7,6 +7,110 @@ from sklearn.metrics.pairwise import rbf_kernel
 import sys
 from time import sleep
 np.set_printoptions(threshold=sys.maxsize)
+from numpy import zeros
+import pyigtl
+from PyDAQmx import *
+import threading
+import platform
+from ctypes import byref
+
+DrfToAxis7 = np.array([
+    [1,	0,					-0.0349154595874112,	-8.54323644559691],
+    [0,	0.0213641235902639,	0.999162169684586,	1.90874592349076],
+    [0,	0.999771761065104,	-0.0213510972315487,	-4.35779932552848],
+    [0,	0,					0,					1]
+    ])
+
+class NIDAQ(Task):
+    """
+    Class definition for national instruments data acquisition system
+    """
+    def __init__(self, dev_name='Dev1', channels=np.array([0]), data_len=2000, sampleFreq=100000.0, contSample=True):
+        Task.__init__(self)
+        if dev_name is None:
+            dev_name = dev_name
+        self.dev_name = dev_name
+        self._data = zeros(data_len * channels.shape[0])
+        self.channels = channels
+        self.sampleFreq = sampleFreq
+        self.data_len = data_len
+        self.read = int32()
+        self.contSample = contSample
+
+        self._data_lock = threading.Lock()
+        self._newdata_event = threading.Event()
+
+    # Sets up analog inputs of the NI DAQ. This function must be called from a new taskj which does not contain digital outputs.
+    def SetAnalogInputs(self):
+        for i in range(self.channels.shape[0]):
+            self.CreateAIVoltageChan(self.dev_name+"/ai"+str(self.channels[i]),"", DAQmx_Val_RSE, -10.0,10.0, DAQmx_Val_Volts, None)
+
+        if self.contSample is True:
+            self.CfgSampClkTiming("", self.sampleFreq, DAQmx_Val_Rising, DAQmx_Val_ContSamps, self.data_len)
+        else:
+            self.CfgSampClkTiming("", self.sampleFreq, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, self.data_len)
+
+        if platform.system() == 'Windows' and self.contSample is True:
+            self.AutoRegisterEveryNSamplesEvent(DAQmx_Val_Acquired_Into_Buffer, self.data_len,0)
+            self.AutoRegisterDoneEvent(0)
+        elif (platform.system() == 'Linux' or platform.system() == 'Darwin'):
+            pass
+
+    # Sets up the counter output of the NI DAQ for frequency generation. Must be a called from a new task which does not contain analog input.
+    def SetClockOutput(self, dst="PFI7"):
+        self.CreateCOPulseChanFreq( "/" + self.dev_name + "/" + "ctr0", "", DAQmx_Val_Hz, DAQmx_Val_Low, 0.0, 1250000, 0.5)
+        self.CfgImplicitTiming(DAQmx_Val_ContSamps, 1000)
+        DAQmxConnectTerms("/" + self.dev_name + "/" + "PFI12", "/" + self.dev_name + "/" + dst, DAQmx_Val_DoNotInvertPolarity)
+
+
+    def EveryNCallback(self):
+        with self._data_lock:
+            self.ReadAnalogF64(self.data_len, 10.0, DAQmx_Val_GroupByChannel, self._data, self.data_len*self.channels.shape[0], byref(self.read), None)
+            self._newdata_event.set()
+        return 0 # The function should return an integer
+
+    def DoneCallback(self, status):
+        print("Status",status.value)
+        return 0 # The function should return an integer
+
+    def get_data(self, blocking=True, timeout=None):
+        if platform.system() == 'Windows' and self.contSample is True:
+            if blocking:
+                if not self._newdata_event.wait(timeout):
+                    raise ValueError("timeout waiting for data from device")
+            with self._data_lock:
+                self._newdata_event.clear()
+                return self._data.copy()
+        elif platform.system() == 'Linux' or platform.system() == 'Darwin' or self.contSample is False:
+            self.ReadAnalogF64(self.data_len, 10.0, DAQmx_Val_GroupByChannel, self._data, self.data_len*self.channels.shape[0], byref(self.read), None)
+            return self._data.copy()
+
+    def get_data_matrix(self, timeout=None):
+        data = self.get_data(timeout=timeout)
+        data_mat = np.matrix(np.reshape(data, (self.channels.shape[0], self.data_len)).transpose())
+        return data_mat
+
+    def resetDevice(self):
+        DAQmxResetDevice(self.dev_name)
+
+channeldict = {0: 4, 1: 0, 2: 8, 3: 1, 4: 9, 5: 2, 6: 10, 7: 11, 8: 3, 9: 8, 10: 12, 11: 13, 12: 5, 13: 14, 14: 6, 15: 15, 16: 7}
+sampleFreq = 40000
+noSamples = 4000
+freqs = np.array([6000, 6200, 6400, 6600, 6800, 7000, 7200, 7400])
+idx_signal = freqs/sampleFreq*noSamples+1
+idx_signal = idx_signal.astype(int)
+deviceID = 'Dev1'
+sensor_channel = 7
+sensor_channel = channeldict[sensor_channel]
+PhaseOffset = 0
+
+task = NIDAQ(dev_name = deviceID, channels = np.array([4, str(sensor_channel)]), sampleFreq = sampleFreq, data_len = noSamples)
+task.SetAnalogInputs()
+task.StartTask()
+
+task1 = NIDAQ(dev_name=deviceID)
+task1.SetClockOutput()
+task1.StartTask()
 
 class CoilModel:
 
@@ -121,6 +225,19 @@ coil_model = CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*100
 
 def theoretical_field(model, point):
     return np.concatenate(model.coil_field_total(point[0], point[1], point[2]), axis=1).T # (3, 8)
+
+def get_fft(idx_signal):
+    ft = task.get_data_matrix(timeout = 10.0)
+    yf = np.fft.fft(ft, axis = 0) / noSamples
+    yf = yf[idx_signal, :]
+    return yf
+    
+def get_flux(yf, PhaseOffset):
+    yf_mag = 2 * abs(yf[:, 1])
+    yf_phase = np.angle(yf)
+    angleSignal = yf_phase[:, 0] - yf_phase[:, 1] + PhaseOffset
+    flux = np.sin(angleSignal) * yf_mag    
+    return flux
     
 def produce_basis_vectors_for_prediction(n):
     to_pred_x = np.array([np.ones(shape=(n)), np.zeros(shape=(n)), np.zeros(shape=(n))])
@@ -224,7 +341,7 @@ class cube_to_calib:
         self.interpolator.update_kernel(new_points, new_measures)
         return self.interpolator.uncertainty(new_points, new_measures)
 
-def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3)**2, interval=100, EPSILON=1, AMOUNT_OF_NEW_POINTS=15):
+def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3)**2, interval=100, EPSILON=1, AMOUNT_OF_NEW_POINTS=15, referenceToBoard=None):
     # EPSILON is mm of tolerance for the visualization of the cube
             
     plt.close('all')
@@ -272,12 +389,15 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
         az.set_zlim(cube.origin_corner[2]-EPSILON, cube.origin_corner[2]+cube.side_length+EPSILON)
         
         for _ in range(AMOUNT_OF_NEW_POINTS):
-            message = client.wait_for_message("SensorTipToFG", timeout=5)
+            message = client.wait_for_message("SensorToReference", timeout=5)
             if message is not None:
-                pos = message.matrix.T[3][:3]
-                ori = message.matrix.T[2][:3]
-                tmp = np.dot(ori, theoretical_field(coil_model, pos))
-                q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
+                mat = np.matmul(np.matmul(referenceToBoard, message.matrix), DrfToAxis7)
+                pos = mat.T[3][:3]
+                ori = mat.T[2][:3]
+                tmp = get_flux(get_fft(idx_signal), PhaseOffset)
+                # messaggio ottico, get flux e poi ancora messaggio ottico e faccio la media
+                # per le posizioni faccio la media, per le orientazioni faccio la somma e la normalizzo
+                q.put(np.concatenate((pos, ori, tmp), axis=0))
                 ax.quiver(pos[0], pos[1], pos[2], 7*ori[0], 7*ori[1], 7*ori[2], color='blue')
                 ay.quiver(pos[0], pos[1], pos[2], 7*ori[0], 7*ori[1], 7*ori[2], color='blue')
                 az.quiver(pos[0], pos[1], pos[2], 7*ori[0], 7*ori[1], 7*ori[2], color='blue')
@@ -320,5 +440,7 @@ def uniaxial_dynamic_cal(client, origin, side_length, GAMMA=.0005, SIGMA=(2.5e-3
     #plt.tight_layout()
     
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
+message = client.wait_for_message("ReferenceToBoard", timeout=5)
+referenceToBoard = message.matrix 
 #client = None
-uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=10, origin=np.array([0., 0., 100.]), side_length=100., SIGMA=1e-10)
+uniaxial_dynamic_cal(client, AMOUNT_OF_NEW_POINTS=10, origin=np.array([0., 0., 100.]), side_length=100., SIGMA=1e-10, referenceToBoard=referenceToBoard)
