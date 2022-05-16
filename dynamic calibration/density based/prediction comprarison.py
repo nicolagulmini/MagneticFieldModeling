@@ -1,8 +1,7 @@
 import os
 import numpy as np
-
-from sklearn.gaussian_process.kernels import RBF
-from sklearn.gaussian_process import GaussianProcessRegressor as gpr
+import crbfi
+import gpr
 from sklearn.metrics import mean_absolute_error as MAE, mean_squared_error as MSE
 
 import tensorflow as tf
@@ -30,27 +29,26 @@ def main():
     x_test, y_test = test[:, :6], test[:, 6:]
     den_to_normalize_test = np.mean(abs(y_test))
     
+    # prepare stack grid for crbfi
+    
     dictionary_with_performances = {}
     
     # gaussian process
-    rbf_kernel = RBF()
+    
     for alpha in [1e-10, 1e-8, 1e-6, 1e-4]:
-        regressor = gpr(kernel=rbf_kernel, 
-                                alpha=alpha, 
-                                optimizer='fmin_l_bfgs_b', 
-                                #n_restarts_optimizer=10, 
-                                normalize_y=False, 
-                                copy_X_train=False, 
-                                random_state=None).fit(x_train, y_train)
-        
-        mae = MAE(regressor.predict(x_val), y_val) / den_to_normalize_val * 100
-        rmse = MSE(regressor.predict(x_val), y_val, squared=False) / den_to_normalize_val * 100
-        r2 = regressor.score(x_val, y_val)
-        
+        gp = gpr.gaussian_process_regressor(alpha=alpha, points=x_train, measures=y_train)
+        gp.fit()
+        pred, unc = gp.predict(x_val)
+        mae = MAE(pred, y_val) / den_to_normalize_val * 100
+        rmse = MSE(pred, y_val, squared=False) / den_to_normalize_val * 100
+        r2 = gp.score(x_val, y_val)
         dictionary_with_performances["gaussian process " + str(alpha)] = {"alpha": alpha, 
                                                             "nmae": mae,
                                                             "nrmse": rmse,
-                                                            "r2": r2}
+                                                            "r2": r2,
+                                                            "uncertainty": unc}
+        
+        # crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=) 
     
     # radial basis function interpolation
     # find the best parameters
