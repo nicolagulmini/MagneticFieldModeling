@@ -21,13 +21,13 @@ def main():
     training = dataset[:int(.8*dataset.shape[0])]
     x_train, y_train = training[:, :6], training[:, 6:]
     
-    validation = dataset[int(.8*dataset.shape[0]):int(.9*dataset.shape[0])]
+    validation = dataset[int(.8*dataset.shape[0]):]#int(.9*dataset.shape[0])]
     x_val, y_val = validation[:, :6], validation[:, 6:]
     den_to_normalize_val = np.mean(abs(y_val)) # this is a scalar
     
-    test = dataset[int(.9*dataset.shape[0]):]
-    x_test, y_test = test[:, :6], test[:, 6:]
-    den_to_normalize_test = np.mean(abs(y_test))
+    # test = dataset[int(.9*dataset.shape[0]):]
+    # x_test, y_test = test[:, :6], test[:, 6:]
+    # den_to_normalize_test = np.mean(abs(y_test))
     
     # prepare stack grid for crbfi
     
@@ -52,7 +52,7 @@ def main():
         
         # radial basis function interpolation 
         
-        # crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=) 
+        crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=x_val) 
         pred = crbf.predict()
         unc = crbf.uncertainty()
         mae = MAE(pred, y_val) / den_to_normalize_val * 100
@@ -64,11 +64,10 @@ def main():
         
 
     
-    # neural network 
-    # None for now
-    
-    # test on a diagonal (need to know the dimension of the cube)
-    # otherwise produce a test from the same dataset of the training and the validation
+        # neural network 
+        # None for now
+        
+        # test also on a diagonal (need to know the dimension of the cube)
 
     
     # once we have all of them, compare them 
@@ -76,5 +75,7 @@ def main():
     # time (?)
     # uncertainty
     # correlation between uncertainty and error (only for RBFI and GP)
+    # correlation between coverage and uncertainty
+    # correlation between coverage and error
 
 main()
