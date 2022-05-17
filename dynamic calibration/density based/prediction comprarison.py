@@ -33,9 +33,11 @@ def main():
     
     dictionary_with_performances = {}
     
-    # gaussian process
-    
+    # to model the noise
     for alpha in [1e-10, 1e-8, 1e-6, 1e-4]:
+        
+        # gaussian process regression
+        
         gp = gpr.gaussian_process_regressor(alpha=alpha, points=x_train, measures=y_train)
         gp.fit()
         pred, unc = gp.predict(x_val)
@@ -48,12 +50,22 @@ def main():
                                                             "r2": r2,
                                                             "uncertainty": unc}
         
+        # radial basis function interpolation 
+        
         # crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=) 
+        pred = crbf.predict()
+        unc = crbf.uncertainty()
+        mae = MAE(pred, y_val) / den_to_normalize_val * 100
+        rmse = MSE(pred, y_val, squared=False) / den_to_normalize_val * 100
+        dictionary_with_performances["custom radial basis function interpolator " + str(alpha)] = {"alpha": alpha, 
+                                                            "nmae": mae,
+                                                            "nrmse": rmse,
+                                                            "uncertainty": unc}
+        
+
     
-    # radial basis function interpolation
-    # find the best parameters
-    
-    # neural network
+    # neural network 
+    # None for now
     
     # test on a diagonal (need to know the dimension of the cube)
     # otherwise produce a test from the same dataset of the training and the validation
