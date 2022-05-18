@@ -4,9 +4,19 @@ import crbfi
 import gpr
 from sklearn.metrics import mean_absolute_error as MAE, mean_squared_error as MSE
 
-import tensorflow as tf
-from tensorflow import keras
+# import tensorflow as tf
+# from tensorflow import keras
 
+import matplotlib.pyplot as plt
+
+def nice_plot(x, y, x_name, y_name, name, color, grid=False, legend_pos=None):
+    
+    plt.scatter(x, y, color=color, marker='.', label=name)
+    plt.plot(x, y, color=color, ls='--')
+    if grid: plt.grid(color='grey', linewidth=.5, alpha=.5)
+    if x_name is not None: plt.xlabel(x_name)
+    if y_name is not None: plt.ylabel(y_name)
+    if legend_pos is not None: plt.legend(loc=legend_pos)
 
 def main():
     if not os.path.exists('./sampled_points.csv'):
@@ -34,7 +44,8 @@ def main():
     dictionary_with_performances = {}
     
     # to model the noise
-    for alpha in [1e-10, 1e-8, 1e-6, 1e-4]:
+    alphas = [1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3]
+    for alpha in alphas:
         
         # gaussian process regression
         
@@ -69,13 +80,42 @@ def main():
         
         # test also on a diagonal (need to know the dimension of the cube)
 
+    # print(dictionary_with_performances)
     
-    # once we have all of them, compare them 
-    # nMAE and nRMSE on validation and test
-    # time (?)
-    # uncertainty
-    # correlation between uncertainty and error (only for RBFI and GP)
-    # correlation between coverage and uncertainty
-    # correlation between coverage and error
+    # gaussian process
+    
+    plt.figure()
+    plt.title(r'error vs $\alpha$ Gaussian Process Regression')
+    y = [dictionary_with_performances["gaussian process " + str(alpha)]['nmae'] for alpha in alphas]
+    nice_plot(alphas, y, r'$\alpha$', 'error', 'nMAE', color='green', grid=True)
+    
+    y = [dictionary_with_performances["gaussian process " + str(alpha)]['nrmse'] for alpha in alphas]
+    nice_plot(alphas, y, None, None, 'nRMSE', color='orange', legend_pos='lower right')
+    plt.xscale('log')
+    plt.savefig('gpr alpha error')
+    
+    # crbfi
+    
+    plt.figure()
+    plt.title(r'error vs $\alpha$ Radial Basis Function Interpolation')
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae'] for alpha in alphas]
+    nice_plot(alphas, y, r'$\alpha$', 'error', 'nMAE', color='green', grid=True)
+    
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nrmse'] for alpha in alphas]
+    nice_plot(alphas, y, None, None, 'nRMSE', color='orange', legend_pos='lower right')
+    plt.xscale('log')
+    plt.savefig('crbfi alpha error')
 
 main()
+
+# time (?)
+
+
+
+
+
+
+
+
+
+
