@@ -13,7 +13,7 @@ def get_theoretical_field(model, point, ori=None):
     if ori is None: return tmp # (3, 8)
     return np.dot(ori, tmp) 
 
-def nice_plot(x, y, x_name, y_name, name, marker, grid=False, legend_pos=None):
+def nice_plot(x, y, x_name=None, y_name=None, name='', marker='o', grid=False, legend_pos=None):
     plt.scatter(x, y, marker=marker, label=name)
     plt.plot(x, y, ls='--')
     if grid: plt.grid(color='grey', linewidth=.5, alpha=.5)
@@ -29,6 +29,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
         return
     
     # the coil model is necessary to get the comparison for the simulated magnetic data
+    # it makes sense almost only if we sample with a simulated magnetic field. Otherwise just ignore the related section.
     coil_model = Coil.CoilModel(module_config={'centers_x': centers_x, 'centers_y': centers_y})
 
     x_diag = np.linspace(origin[0], origin[0]+side_length, n_diag_points)[:, np.newaxis]
@@ -40,9 +41,9 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     diag_for_y = np.concatenate((diag, np.array([[0., 1., 0.] for _ in range(n_diag_points)])), axis=1)
     diag_for_z = np.concatenate((diag, np.array([[0., 0., 1.] for _ in range(n_diag_points)])), axis=1)
 
-    simulated_x = np.array([get_theoretical_field(coil_model, diag_for_x[i][:3], diag_for_x[i][3:]) for i in range(n_diag_points)])
-    simulated_y = np.array([get_theoretical_field(coil_model, diag_for_y[i][:3], diag_for_y[i][3:]) for i in range(n_diag_points)])
-    simulated_z = np.array([get_theoretical_field(coil_model, diag_for_z[i][:3], diag_for_z[i][3:]) for i in range(n_diag_points)])
+    simulated_x = np.array([get_theoretical_field(coil_model, diag_for_x[i][:3], diag_for_x[i][3:]).A1 for i in range(n_diag_points)])
+    simulated_y = np.array([get_theoretical_field(coil_model, diag_for_y[i][:3], diag_for_y[i][3:]).A1 for i in range(n_diag_points)])
+    simulated_z = np.array([get_theoretical_field(coil_model, diag_for_z[i][:3], diag_for_z[i][3:]).A1 for i in range(n_diag_points)])
         
     dataset = np.loadtxt('sampled_points.csv') # shape should be (n, 14)
     # n is the number of points
@@ -85,24 +86,18 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
         to_predict = np.concatenate((x_val, diag_for_x, diag_for_y, diag_for_z), axis=0)
         crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=to_predict) 
         pred = crbf.predict()
-        pred_val, pred_x, pred_y, pred_z = pred[:x_val.shape[0]], pred[x_val.shape[0]:x_val.shape[0]+]
+        pred_val, pred_x, pred_y, pred_z = pred[:x_val.shape[0]], pred[x_val.shape[0]:x_val.shape[0]+n_diag_points], pred[x_val.shape[0]+n_diag_points:x_val.shape[0]+int(2*n_diag_points)], pred[x_val.shape[0]+int(2*n_diag_points):]
         unc = crbf.uncertainty()
+        unc_val, unc_x, unc_y, unc_z = unc[:x_val.shape[0]], unc[x_val.shape[0]:x_val.shape[0]+n_diag_points], unc[x_val.shape[0]+n_diag_points:x_val.shape[0]+int(2*n_diag_points)], unc[x_val.shape[0]+int(2*n_diag_points):]
         
-        mae_per_point = [MAE(pred[i], y_val[i]) for i in range(y_val.shape[0])]
+        mae_per_point = [MAE(pred_val[i], y_val[i]) for i in range(y_val.shape[0])]
         mae = sum(mae_per_point)/len(mae_per_point)
         mae = mae / den_to_normalize_val * 100
         
-        rmse_per_point = [MSE(pred[i], y_val[i], squared=False) for i in range(y_val.shape[0])]
+        rmse_per_point = [MSE(pred_val[i], y_val[i], squared=False) for i in range(y_val.shape[0])]
         rmse = sum(rmse_per_point)/len(rmse_per_point)
         rmse = rmse / den_to_normalize_val * 100
-        
-        crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=diag_for_x) 
-        pred_x = crbf.predict()
-        crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=diag_for_y) 
-        pred_y = crbf.predict()
-        crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=diag_for_z) 
-        pred_z = crbf.predict()
-        
+                
         dictionary_with_performances["custom radial basis function interpolator " + str(alpha)] = {"alpha": alpha, 
                                                             "nmae": mae,
                                                             "nrmse": rmse,
@@ -112,6 +107,9 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
                                                             "diag x preds": pred_x,
                                                             "diag y preds": pred_y,
                                                             "diag z preds": pred_z,
+                                                            "unc diag x": unc_x,
+                                                            "unc diag y": unc_y,
+                                                            "unc diag z": unc_z,
                                                             }
     
         # neural network 
@@ -195,11 +193,26 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.yscale('log')
     plt.savefig('rbfi nrmse unc log')
     '''
-
+    
+    alpha_star = alphas[0]
     plt.figure()
-    plt.plot(range(n_diag_points), dictionary_with_performances["custom radial basis function interpolator " + str(1e-10)]['diag x preds'][:, 0], color='red')
-    plt.plot(range(n_diag_points), np.array(simulated_x)[:, 0, 0], color='green')
-    plt.show()
+    plt.title("Magnetic field prediction and comparison of RBFI - x component, first coil\n(only for simulated magnetic data)")
+    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['diag x preds']
+    print(y.shape, simulated_x.shape)
+    nice_plot(range(n_diag_points), y[:,0], 'diag point', 'magnetic field (x component)', 'predicted', grid=True)
+    nice_plot(range(n_diag_points), simulated_x[:,0], name='simulated', marker='^', legend_pos='upper right')
+    # maybe uncertainty as confidence intervals?
+    plt.savefig('rbfi pred 1st coil x comp')
+    # we can choose to plot different coils and also different components
+    
+    plt.figure()
+    plt.title("Magnetic field prediction and comparison of RBFI - y component, first coil\n(only for simulated magnetic data)")
+    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['diag y preds']
+    print(y.shape, simulated_y.shape)
+    nice_plot(range(n_diag_points), y[:,0], 'diag point', 'magnetic field (y component)', 'predicted', grid=True)
+    nice_plot(range(n_diag_points), simulated_y[:,0], name='simulated', marker='^', legend_pos='upper right')
+    # maybe uncertainty as confidence intervals?
+    plt.savefig('rbfi pred 1st coil y comp')
 
 main()
 
