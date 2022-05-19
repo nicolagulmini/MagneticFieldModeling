@@ -3,41 +3,17 @@ import numpy as np
 import crbfi
 import gpr
 from sklearn.metrics import mean_absolute_error as MAE, mean_squared_error as MSE
-
+import matplotlib.pyplot as plt
+import CoilModel as Coil
 # import tensorflow as tf
 # from tensorflow import keras
-
-import matplotlib.pyplot as plt
-
-import CoilModel as Coil
-
-coil_model = Coil.CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
-                                      'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]}) # mm
 
 def get_theoretical_field(model, point, ori=None):
     tmp = np.concatenate(model.coil_field_total(point[0], point[1], point[2]), axis=1).T
     if ori is None: return tmp # (3, 8)
     return np.dot(ori, tmp) 
 
-origin = np.array([-50., -50., 50.])
-side_length = 100.
-n_diag_points = 100
-x_diag = np.linspace(origin[0], origin[0]+side_length, n_diag_points)[:, np.newaxis]
-y_diag = np.linspace(origin[1], origin[1]+side_length, n_diag_points)[:, np.newaxis]
-z_diag = np.linspace(origin[2], origin[2]+side_length, n_diag_points)[:, np.newaxis]
-diag = np.concatenate((x_diag, y_diag, z_diag), axis=1)
-
-diag_for_x = np.concatenate((diag, np.array([[1., 0., 0.] for _ in range(n_diag_points)])), axis=1)
-diag_for_y = np.concatenate((diag, np.array([[0., 1., 0.] for _ in range(n_diag_points)])), axis=1)
-diag_for_z = np.concatenate((diag, np.array([[0., 0., 1.] for _ in range(n_diag_points)])), axis=1)
-
-simulated_x = np.array([get_theoretical_field(coil_model, diag_for_x[i][:3], diag_for_x[i][3:]) for i in range(n_diag_points)])
-simulated_y = np.array([get_theoretical_field(coil_model, diag_for_y[i][:3], diag_for_y[i][3:]) for i in range(n_diag_points)])
-simulated_z = np.array([get_theoretical_field(coil_model, diag_for_z[i][:3], diag_for_z[i][3:]) for i in range(n_diag_points)])
-
-
 def nice_plot(x, y, x_name, y_name, name, marker, grid=False, legend_pos=None):
-    
     plt.scatter(x, y, marker=marker, label=name)
     plt.plot(x, y, ls='--')
     if grid: plt.grid(color='grey', linewidth=.5, alpha=.5)
@@ -45,10 +21,28 @@ def nice_plot(x, y, x_name, y_name, name, marker, grid=False, legend_pos=None):
     if y_name is not None: plt.ylabel(y_name)
     if legend_pos is not None: plt.legend(loc=legend_pos)
 
-def main():
+def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]):
+    # put the origin of the cube, the side length and the number of points along the diagonal manually
+    
     if not os.path.exists('./sampled_points.csv'):
         print('There are no data.')
         return
+    
+    # the coil model is necessary to get the comparison for the simulated magnetic data
+    coil_model = Coil.CoilModel(module_config={'centers_x': centers_x, 'centers_y': centers_y})
+
+    x_diag = np.linspace(origin[0], origin[0]+side_length, n_diag_points)[:, np.newaxis]
+    y_diag = np.linspace(origin[1], origin[1]+side_length, n_diag_points)[:, np.newaxis]
+    z_diag = np.linspace(origin[2], origin[2]+side_length, n_diag_points)[:, np.newaxis]
+    diag = np.concatenate((x_diag, y_diag, z_diag), axis=1)
+
+    diag_for_x = np.concatenate((diag, np.array([[1., 0., 0.] for _ in range(n_diag_points)])), axis=1)
+    diag_for_y = np.concatenate((diag, np.array([[0., 1., 0.] for _ in range(n_diag_points)])), axis=1)
+    diag_for_z = np.concatenate((diag, np.array([[0., 0., 1.] for _ in range(n_diag_points)])), axis=1)
+
+    simulated_x = np.array([get_theoretical_field(coil_model, diag_for_x[i][:3], diag_for_x[i][3:]) for i in range(n_diag_points)])
+    simulated_y = np.array([get_theoretical_field(coil_model, diag_for_y[i][:3], diag_for_y[i][3:]) for i in range(n_diag_points)])
+    simulated_z = np.array([get_theoretical_field(coil_model, diag_for_z[i][:3], diag_for_z[i][3:]) for i in range(n_diag_points)])
         
     dataset = np.loadtxt('sampled_points.csv') # shape should be (n, 14)
     # n is the number of points
@@ -65,8 +59,6 @@ def main():
     # test = dataset[int(.9*dataset.shape[0]):]
     # x_test, y_test = test[:, :6], test[:, 6:]
     # den_to_normalize_test = np.mean(abs(y_test))
-    
-    # prepare stack grid for crbfi
     
     dictionary_with_performances = {}
     
@@ -90,8 +82,10 @@ def main():
         
         # radial basis function interpolation 
         
-        crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=x_val) 
+        to_predict = np.concatenate((x_val, diag_for_x, diag_for_y, diag_for_z), axis=0)
+        crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=to_predict) 
         pred = crbf.predict()
+        pred_val, pred_x, pred_y, pred_z = pred[:x_val.shape[0]], pred[x_val.shape[0]:x_val.shape[0]+]
         unc = crbf.uncertainty()
         
         mae_per_point = [MAE(pred[i], y_val[i]) for i in range(y_val.shape[0])]
