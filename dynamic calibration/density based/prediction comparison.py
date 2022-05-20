@@ -64,6 +64,16 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     # n is the number of points
     # each point is 14-dimensional: 3 positions, 3 orientations, 8 coils 
     
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    plt.title("gathered points")
+    ax.scatter3D(dataset[:, 0], dataset[:, 1], dataset[:, 2], alpha=.1, marker='.')
+    ax.set_xlabel('x (mm)')
+    ax.set_ylabel('y (mm)')
+    ax.set_zlabel('z (mm)')
+    #plt.savefig('comparison.png')
+    plt.show()
+    
     np.random.shuffle(dataset)
     training = dataset[:int(.8*dataset.shape[0])]
     x_train, y_train = training[:, :6], training[:, 6:]
@@ -82,7 +92,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     dictionary_with_performances = {}
     
     # to model the noise
-    alphas = [1e-10]#, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1., 10., 100.]
+    alphas = [1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1., 10., 100.]
     for alpha in alphas:
         
         # gaussian process regression
@@ -117,7 +127,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
         dictionary_with_performances["custom radial basis function interpolator " + str(alpha)] = {"alpha": alpha, 
                                                             "nmae": mae,
                                                             "nrmse": rmse,
-                                                            "uncertainty": unc,
+                                                            "uncertainty": unc_val,
                                                             "nmae per point": mae_per_point,
                                                             "nrmse per point": rmse_per_point,
                                                             "diag x preds": pred_x,
