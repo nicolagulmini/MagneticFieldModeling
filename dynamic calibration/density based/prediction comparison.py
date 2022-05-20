@@ -20,6 +20,21 @@ def nice_plot(x, y, x_name=None, y_name=None, name='', marker='o', grid=False, l
     if x_name is not None: plt.xlabel(x_name)
     if y_name is not None: plt.ylabel(y_name)
     if legend_pos is not None: plt.legend(loc=legend_pos)
+    
+def get_metrics(pred, unc, x_val, y_val, n_diag_points, den_to_normalize_val):
+    pred_val, pred_x, pred_y, pred_z = pred[:x_val.shape[0]], pred[x_val.shape[0]:x_val.shape[0]+n_diag_points], pred[x_val.shape[0]+n_diag_points:x_val.shape[0]+int(2*n_diag_points)], pred[x_val.shape[0]+int(2*n_diag_points):]
+    unc_val, unc_x, unc_y, unc_z = unc[:x_val.shape[0]], unc[x_val.shape[0]:x_val.shape[0]+n_diag_points], unc[x_val.shape[0]+n_diag_points:x_val.shape[0]+int(2*n_diag_points)], unc[x_val.shape[0]+int(2*n_diag_points):]
+    
+    mae_per_point = [MAE(pred_val[i], y_val[i]) for i in range(y_val.shape[0])]
+    mae = sum(mae_per_point)/len(mae_per_point)
+    mae = mae / den_to_normalize_val * 100
+    
+    rmse_per_point = [MSE(pred_val[i], y_val[i], squared=False) for i in range(y_val.shape[0])]
+    rmse = sum(rmse_per_point)/len(rmse_per_point)
+    rmse = rmse / den_to_normalize_val * 100
+    
+    return pred_val, pred_x, pred_y, pred_z, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point
+    
 
 def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]):
     # put the origin of the cube, the side length and the number of points along the diagonal manually
@@ -61,6 +76,9 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     # x_test, y_test = test[:, :6], test[:, 6:]
     # den_to_normalize_test = np.mean(abs(y_test))
     
+    # to get also the diagonal predictions
+    to_predict = np.concatenate((x_val, diag_for_x, diag_for_y, diag_for_z), axis=0)
+    
     dictionary_with_performances = {}
     
     # to model the noise
@@ -68,36 +86,34 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     for alpha in alphas:
         
         # gaussian process regression
-        
+        '''
         gp = gpr.gaussian_process_regressor(alpha=alpha, points=x_train, measures=y_train)
         gp.fit()
-        pred, unc = gp.predict(x_val)
-        mae = MAE(pred, y_val) / den_to_normalize_val * 100
-        rmse = MSE(pred, y_val, squared=False) / den_to_normalize_val * 100
+        pred, unc = gp.predict(to_predict)
+        pred_val, pred_x, pred_y, pred_z, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point = get_metrics(pred, unc, x_val, y_val, n_diag_points, den_to_normalize_val)
         r2 = gp.score(x_val, y_val)
         dictionary_with_performances["gaussian process " + str(alpha)] = {"alpha": alpha, 
                                                             "nmae": mae,
                                                             "nrmse": rmse,
                                                             "r2": r2,
-                                                            "uncertainty": unc}
-        
+                                                            "uncertainty": unc,
+                                                            "nmae per point": mae_per_point,
+                                                            "nrmse per point": rmse_per_point,
+                                                            "diag x preds": pred_x,
+                                                            "diag y preds": pred_y,
+                                                            "diag z preds": pred_z,
+                                                            "unc diag x": unc_x,
+                                                            "unc diag y": unc_y,
+                                                            "unc diag z": unc_z
+                                                            }
+        '''
         # radial basis function interpolation 
         
-        to_predict = np.concatenate((x_val, diag_for_x, diag_for_y, diag_for_z), axis=0)
+        
         crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=to_predict) 
         pred = crbf.predict()
-        pred_val, pred_x, pred_y, pred_z = pred[:x_val.shape[0]], pred[x_val.shape[0]:x_val.shape[0]+n_diag_points], pred[x_val.shape[0]+n_diag_points:x_val.shape[0]+int(2*n_diag_points)], pred[x_val.shape[0]+int(2*n_diag_points):]
         unc = crbf.uncertainty()
-        unc_val, unc_x, unc_y, unc_z = unc[:x_val.shape[0]], unc[x_val.shape[0]:x_val.shape[0]+n_diag_points], unc[x_val.shape[0]+n_diag_points:x_val.shape[0]+int(2*n_diag_points)], unc[x_val.shape[0]+int(2*n_diag_points):]
-        
-        mae_per_point = [MAE(pred_val[i], y_val[i]) for i in range(y_val.shape[0])]
-        mae = sum(mae_per_point)/len(mae_per_point)
-        mae = mae / den_to_normalize_val * 100
-        
-        rmse_per_point = [MSE(pred_val[i], y_val[i], squared=False) for i in range(y_val.shape[0])]
-        rmse = sum(rmse_per_point)/len(rmse_per_point)
-        rmse = rmse / den_to_normalize_val * 100
-                
+        pred_val, pred_x, pred_y, pred_z, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point = get_metrics(pred, unc, x_val, y_val, n_diag_points, den_to_normalize_val)
         dictionary_with_performances["custom radial basis function interpolator " + str(alpha)] = {"alpha": alpha, 
                                                             "nmae": mae,
                                                             "nrmse": rmse,
@@ -109,7 +125,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
                                                             "diag z preds": pred_z,
                                                             "unc diag x": unc_x,
                                                             "unc diag y": unc_y,
-                                                            "unc diag z": unc_z,
+                                                            "unc diag z": unc_z
                                                             }
     
         # neural network 
@@ -138,6 +154,8 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     nice_plot(alphas, y, r'$\alpha$', 'error', 'nMAE', marker='^', grid=True, legend_pos='lower right')
     plt.xscale('log')
     plt.savefig('gpr alpha r2')
+    
+    '''
     
     # crbfi error vs alpha
     
@@ -192,13 +210,13 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.xscale('log')
     plt.yscale('log')
     plt.savefig('rbfi nrmse unc log')
-    '''
+
     
-    alpha_star = alphas[0]
+    alpha_star = alphas[0] # pick the best alpha
+    
     plt.figure()
     plt.title("Magnetic field prediction and comparison of RBFI - x component, first coil\n(only for simulated magnetic data)")
     y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['diag x preds']
-    print(y.shape, simulated_x.shape)
     nice_plot(range(n_diag_points), y[:,0], 'diag point', 'magnetic field (x component)', 'predicted', grid=True)
     nice_plot(range(n_diag_points), simulated_x[:,0], name='simulated', marker='^', legend_pos='upper right')
     # maybe uncertainty as confidence intervals?
@@ -208,22 +226,22 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.figure()
     plt.title("Magnetic field prediction and comparison of RBFI - y component, first coil\n(only for simulated magnetic data)")
     y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['diag y preds']
-    print(y.shape, simulated_y.shape)
     nice_plot(range(n_diag_points), y[:,0], 'diag point', 'magnetic field (y component)', 'predicted', grid=True)
     nice_plot(range(n_diag_points), simulated_y[:,0], name='simulated', marker='^', legend_pos='upper right')
     # maybe uncertainty as confidence intervals?
     plt.savefig('rbfi pred 1st coil y comp')
+    
+    # gaussian 
+    '''
+    plt.figure()
+    plt.title("Magnetic field prediction and comparison of Gaussian Process - x component, first coil\n(only for simulated magnetic data)")
+    y = dictionary_with_performances["gaussian process " + str(alpha_star)]['diag x preds']
+    nice_plot(range(n_diag_points), y[:,0], 'diag point', 'magnetic field (x component)', 'predicted', grid=True)
+    nice_plot(range(n_diag_points), simulated_x[:,0], name='simulated', marker='^', legend_pos='upper right')
+    plt.savefig('gp pred 1st coil x comp')
+    '''
+    # it does not work well
 
 main()
 
 # time (?)
-
-
-
-
-
-
-
-
-
-
