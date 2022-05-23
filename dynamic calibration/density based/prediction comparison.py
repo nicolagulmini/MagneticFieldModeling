@@ -8,7 +8,7 @@ import CoilModel as Coil
 # import tensorflow as tf
 # from tensorflow import keras
 
-filename = "esperimento 1"
+filename = "sampled_points"
 
 def get_theoretical_field(model, point, ori=None):
     tmp = np.concatenate(model.coil_field_total(point[0], point[1], point[2]), axis=1).T
@@ -242,6 +242,14 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     nice_plot(range(n_diag_points), simulated_y[:,0], name='simulated', marker='^', legend_pos='upper right')
     # maybe uncertainty as confidence intervals?
     plt.savefig('rbfi pred 1st coil y comp')
+    
+    plt.figure()
+    plt.title("Magnetic field prediction and comparison of RBFI - z component, first coil\n(only for simulated magnetic data)")
+    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['diag z preds']
+    nice_plot(range(n_diag_points), y[:,0], 'diag point', 'magnetic field (z component)', 'predicted', grid=True)
+    nice_plot(range(n_diag_points), simulated_z[:,0], name='simulated', marker='^', legend_pos='upper right')
+    # maybe uncertainty as confidence intervals?
+    plt.savefig('rbfi pred 1st coil z comp')
     
     # gaussian 
     '''
