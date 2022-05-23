@@ -54,7 +54,7 @@ print("Press CTRL+C when satisfied about the amount of gathered points. Suddenly
 
 global q, cube, coil_model, client
 q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
-cube = CubeModel.cube_to_calib(np.array([-50., -50., 50.]), side_length=100., point_density=10., minimum_number_of_points=1)
+cube = CubeModel.cube_to_calib(np.array([-50., -50., 50.]), side_length=100., point_density=20., minimum_number_of_points=1)
 coil_model = Coil.CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
                                       'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]}) # mm
 
@@ -149,14 +149,13 @@ def update_graph_live(n_intervals):
         # from the instrument
         message = client.wait_for_message("SensorToReference", timeout=5)
         
-        pos = message.matrix.T[3][:3]
-        print(pos)
-        ori = message.matrix.T[2][:3]
-        tmp = get_theoretical_field(coil_model, pos, ori)
+        # pos = message.matrix.T[3][:3]
+        # ori = message.matrix.T[2][:3]
         
-        # mat = np.matmul(np.matmul(referenceToBoard, message.matrix), DrfToAxis7)
-        # pos = mat.T[3][:3]
-        # ori = mat.T[2][:3]
+        mat = np.matmul(np.matmul(referenceToBoard, message.matrix), DrfToAxis7)
+        pos = mat.T[3][:3]
+        ori = mat.T[2][:3]
+        tmp = get_theoretical_field(coil_model, pos, ori)
         
         fig['data'][3]['x'] = [pos[0]]
         fig['data'][3]['y'] = [pos[1]]
@@ -186,7 +185,6 @@ def update_graph_live(n_intervals):
         return fig
         
     new_raw_points = np.array([q.get() for _ in range(AMOUNT_OF_NEW_POINTS)])
-    print(new_raw_points.shape)
     cube.add_batch(new_raw_points)
 
     # cube is global
