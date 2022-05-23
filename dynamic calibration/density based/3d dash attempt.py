@@ -178,7 +178,10 @@ def update_graph_live(n_intervals):
         fig['data'][5]['v'] = [ori[1]]
         fig['data'][5]['w'] = [ori[2]]        
         
-        q.put(np.concatenate((pos, ori, tmp.A1), axis=0)) # 
+        if pos[0] >= cube.origin_corner[0] and pos[0] <= cube.origin_corner[0]+cube.side_length:
+            if pos[1] >= cube.origin_corner[1] and pos[1] <= cube.origin_corner[1]+cube.side_length:
+                if pos[2] >= cube.origin_corner[2] and pos[2] <= cube.origin_corner[2]+cube.side_length:
+                    q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
         # tmp = get_flux(get_fft(idx_signal), PhaseOffset)
         # q.put(np.concatenate((pos, ori, tmp), axis=0))
         
