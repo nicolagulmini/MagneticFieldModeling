@@ -120,7 +120,6 @@ fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), showlegend=False, uirevision=
 fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
 
 if os.path.exists("./" + FILENAME + ".csv"):
-    print('prova')
     cube.add_batch(np.loadtxt("./" + FILENAME + ".csv"))
     c_x, c_y, c_z = cube.contributions.T
     
@@ -151,6 +150,7 @@ def update_graph_live(n_intervals):
         message = client.wait_for_message("SensorToReference", timeout=5)
         
         pos = message.matrix.T[3][:3]
+        print(pos)
         ori = message.matrix.T[2][:3]
         tmp = get_theoretical_field(coil_model, pos, ori)
         
@@ -186,6 +186,7 @@ def update_graph_live(n_intervals):
         return fig
         
     new_raw_points = np.array([q.get() for _ in range(AMOUNT_OF_NEW_POINTS)])
+    print(new_raw_points.shape)
     cube.add_batch(new_raw_points)
 
     # cube is global
