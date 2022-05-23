@@ -14,6 +14,8 @@ import time
 import pyigtl
 import os
 
+FILENAME = 'esperimento 1'
+
 DrfToAxis7 = np.array([
     [1,	0,					-0.0349154595874112,	-8.54323644559691],
     [0,	0.0213641235902639,	0.999162169684586,	1.90874592349076],
@@ -39,13 +41,13 @@ sensor_channel = 7
 sensor_channel = channeldict[sensor_channel]
 PhaseOffset = 0
 
-task = NIDAQ(dev_name = deviceID, channels = np.array([4, str(sensor_channel)]), sampleFreq = sampleFreq, data_len = noSamples)
-task.SetAnalogInputs()
-task.StartTask()
+# task = NIDAQ(dev_name = deviceID, channels = np.array([4, str(sensor_channel)]), sampleFreq = sampleFreq, data_len = noSamples)
+# task.SetAnalogInputs()
+# task.StartTask()
 
-task1 = NIDAQ(dev_name=deviceID)
-task1.SetClockOutput()
-task1.StartTask()
+# task1 = NIDAQ(dev_name=deviceID)
+# task1.SetClockOutput()
+# task1.StartTask()
 
 AMOUNT_OF_NEW_POINTS = 10
 print("Press CTRL+C when satisfied about the amount of gathered points. Suddenly the interpolation will be computed and the data will be stored in a .csv file.")
@@ -117,8 +119,9 @@ fig.add_trace(go.Cone(x=[cube.origin_corner[0]], y=[cube.origin_corner[1]], z=[c
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), showlegend=False, uirevision='_')
 fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
 
-if os.path.exists('./sampled_points.csv'):
-    cube.add_batch(np.loadtxt('sampled_points.csv'))
+if os.path.exists("./" + FILENAME + ".csv"):
+    print('prova')
+    cube.add_batch(np.loadtxt("./" + FILENAME + ".csv"))
     c_x, c_y, c_z = cube.contributions.T
     
     unc_x = 1.-np.minimum(c_x, np.ones(c_x.shape))
@@ -147,13 +150,13 @@ def update_graph_live(n_intervals):
         # from the instrument
         message = client.wait_for_message("SensorToReference", timeout=5)
         
-        # pos = message.matrix.T[3][:3]
-        # ori = message.matrix.T[2][:3]
-        # tmp = get_theoretical_field(coil_model, pos, ori)
+        pos = message.matrix.T[3][:3]
+        ori = message.matrix.T[2][:3]
+        tmp = get_theoretical_field(coil_model, pos, ori)
         
-        mat = np.matmul(np.matmul(referenceToBoard, message.matrix), DrfToAxis7)
-        pos = mat.T[3][:3]
-        ori = mat.T[2][:3]
+        # mat = np.matmul(np.matmul(referenceToBoard, message.matrix), DrfToAxis7)
+        # pos = mat.T[3][:3]
+        # ori = mat.T[2][:3]
         
         fig['data'][3]['x'] = [pos[0]]
         fig['data'][3]['y'] = [pos[1]]
@@ -176,9 +179,9 @@ def update_graph_live(n_intervals):
         fig['data'][5]['v'] = [ori[1]]
         fig['data'][5]['w'] = [ori[2]]        
         
-        #q.put(np.concatenate((pos, ori, tmp.A1), axis=0)) # 
-        tmp = get_flux(get_fft(idx_signal), PhaseOffset)
-        q.put(np.concatenate((pos, ori, tmp), axis=0))
+        q.put(np.concatenate((pos, ori, tmp.A1), axis=0)) # 
+        # tmp = get_flux(get_fft(idx_signal), PhaseOffset)
+        # q.put(np.concatenate((pos, ori, tmp), axis=0))
         
         return fig
         
@@ -218,9 +221,9 @@ webbrowser.open('http://127.0.0.1:8050/', new=2)
 app.run_server(debug=True, use_reloader=False)
 
 # save state of the cube in case of interrpution
-np.savetxt('sampled_points.csv', np.concatenate((cube.points, cube.measures), 1))
+np.savetxt(FILENAME + ".csv", np.concatenate((cube.points, cube.measures), 1))
 
 # save points in a .csv file and interpolate
-pred, unc = cube.interpolation()
-np.savetxt('predictions.csv', pred)
-np.savetxt('unceratinty.csv', unc)
+# pred, unc = cube.interpolation()
+# np.savetxt('predictions.csv', pred)
+# np.savetxt('unceratinty.csv', unc)
