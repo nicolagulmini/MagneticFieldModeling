@@ -123,6 +123,11 @@ if os.path.exists("./" + FILENAME + ".csv"):
     cube.add_batch(np.loadtxt("./" + FILENAME + ".csv"))
     c_x, c_y, c_z = cube.contributions.T
     
+    perc_coverage_x = round(float(sum(np.minimum(c_x, np.ones(c_x.shape)))/c_x.shape)*100, 2)
+    perc_coverage_y = round(float(sum(np.minimum(c_y, np.ones(c_y.shape)))/c_y.shape)*100, 2)
+    perc_coverage_z = round(float(sum(np.minimum(c_z, np.ones(c_z.shape)))/c_z.shape)*100, 2)
+    print("Starting from coverage (c_x, c_y, c_z) = (%.2f, %.2f, %.2f)" % (perc_coverage_x, perc_coverage_y, perc_coverage_z))
+    
     unc_x = 1.-np.minimum(c_x, np.ones(c_x.shape))
     unc_y = 1.-np.minimum(c_y, np.ones(c_x.shape))
     unc_z = 1.-np.minimum(c_z, np.ones(c_x.shape))

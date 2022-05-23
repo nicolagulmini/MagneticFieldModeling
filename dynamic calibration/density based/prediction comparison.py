@@ -8,6 +8,8 @@ import CoilModel as Coil
 # import tensorflow as tf
 # from tensorflow import keras
 
+filename = "esperimento 1"
+
 def get_theoretical_field(model, point, ori=None):
     tmp = np.concatenate(model.coil_field_total(point[0], point[1], point[2]), axis=1).T
     if ori is None: return tmp # (3, 8)
@@ -39,7 +41,7 @@ def get_metrics(pred, unc, x_val, y_val, n_diag_points, den_to_normalize_val):
 def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]):
     # put the origin of the cube, the side length and the number of points along the diagonal manually
     
-    if not os.path.exists('./sampled_points.csv'):
+    if not os.path.exists("./" + filename + ".csv"):
         print('There are no data.')
         return
     
@@ -60,7 +62,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     simulated_y = np.array([get_theoretical_field(coil_model, diag_for_y[i][:3], diag_for_y[i][3:]).A1 for i in range(n_diag_points)])
     simulated_z = np.array([get_theoretical_field(coil_model, diag_for_z[i][:3], diag_for_z[i][3:]).A1 for i in range(n_diag_points)])
         
-    dataset = np.loadtxt('sampled_points.csv') # shape should be (n, 14)
+    dataset = np.loadtxt("./" + filename + ".csv") # shape should be (n, 14)
     # n is the number of points
     # each point is 14-dimensional: 3 positions, 3 orientations, 8 coils 
     
@@ -250,7 +252,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     nice_plot(range(n_diag_points), simulated_x[:,0], name='simulated', marker='^', legend_pos='upper right')
     plt.savefig('gp pred 1st coil x comp')
     '''
-    # it does not work well
+    # gaussian process does not work well
 
 main()
 
