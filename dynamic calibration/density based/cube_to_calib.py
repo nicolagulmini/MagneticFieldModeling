@@ -54,6 +54,9 @@ class cube_to_calib:
         self.contributions[index] += abs(points[:, 3:6]) / self.minimum_number_of_points # cause points are (x, y, z, orientation_x, orientation_y, orientation_z, measurements...)
         # should ignore points
         
+    def percentages(self):
+        return
+        
     def update_points(self, new_points, new_measures):
         if self.points.shape[0] == 0:
             self.points = new_points

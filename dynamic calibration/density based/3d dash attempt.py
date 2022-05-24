@@ -14,8 +14,7 @@ import time
 import pyigtl
 import os
 
-FILENAME = 'sampled_points1'
-times = 1
+FILENAME = 'sampled_points'
 
 DrfToAxis7 = np.array([
     [1,	0,					-0.0349154595874112,	-8.54323644559691],
@@ -174,59 +173,63 @@ def update_graph_live(n_intervals):
         # pos = message.matrix.T[3][:3]
         # ori = message.matrix.T[2][:3]
         
-        mat = np.matmul(np.matmul(referenceToBoard, message.matrix), DrfToAxis7)
-        pos = mat.T[3][:3]
-        ori = mat.T[2][:3]
-        tmp = get_theoretical_field(coil_model, pos, ori)
+        if message is not None:
+            
+            mat_mul = np.matmul(referenceToBoard, message.matrix)
         
-        mat_2 = np.matmul(np.matmul(referenceToBoard, message.matrix), DrfToAxis7_second_sensor)
-        pos_2 = mat_2.T[3][:3]
-        ori_2 = mat_2.T[2][:3]
-        tmp_2 = get_theoretical_field(coil_model, pos_2, ori_2)
-        
-        mat_3 = np.matmul(np.matmul(referenceToBoard, message.matrix), DrfToAxis7_third_sensor)
-        pos_3 = mat_3.T[3][:3]
-        ori_3 = mat_3.T[2][:3]
-        tmp_3 = get_theoretical_field(coil_model, pos_3, ori_3)
-        
-        fig['data'][3]['x'] = [pos[0]]
-        fig['data'][3]['y'] = [pos[1]]
-        fig['data'][3]['z'] = [pos[2]]
-        fig['data'][3]['u'] = [ori[0]]
-        fig['data'][3]['v'] = [ori[1]]
-        fig['data'][3]['w'] = [ori[2]]
-        
-        fig['data'][4]['x'] = [pos[0]]
-        fig['data'][4]['y'] = [pos[1]]
-        fig['data'][4]['z'] = [pos[2]]
-        fig['data'][4]['u'] = [ori[0]]
-        fig['data'][4]['v'] = [ori[1]]
-        fig['data'][4]['w'] = [ori[2]]
-        
-        fig['data'][5]['x'] = [pos[0]]
-        fig['data'][5]['y'] = [pos[1]]
-        fig['data'][5]['z'] = [pos[2]]
-        fig['data'][5]['u'] = [ori[0]]
-        fig['data'][5]['v'] = [ori[1]]
-        fig['data'][5]['w'] = [ori[2]]        
-        
-        if pos[0] >= cube.origin_corner[0] and pos[0] <= cube.origin_corner[0]+cube.side_length:
-            if pos[1] >= cube.origin_corner[1] and pos[1] <= cube.origin_corner[1]+cube.side_length:
-                if pos[2] >= cube.origin_corner[2] and pos[2] <= cube.origin_corner[2]+cube.side_length:
-                    q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
-                    
-        if pos_2[0] >= cube.origin_corner[0] and pos_2[0] <= cube.origin_corner[0]+cube.side_length:
-            if pos_2[1] >= cube.origin_corner[1] and pos_2[1] <= cube.origin_corner[1]+cube.side_length:
-                if pos_2[2] >= cube.origin_corner[2] and pos_2[2] <= cube.origin_corner[2]+cube.side_length:
-                    q.put(np.concatenate((pos_2, ori_2, tmp_2.A1), axis=0))
-                    
-        if pos_3[0] >= cube.origin_corner[0] and pos_3[0] <= cube.origin_corner[0]+cube.side_length:
-            if pos_3[1] >= cube.origin_corner[1] and pos_3[1] <= cube.origin_corner[1]+cube.side_length:
-                if pos_3[2] >= cube.origin_corner[2] and pos_3[2] <= cube.origin_corner[2]+cube.side_length:
-                    q.put(np.concatenate((pos_3, ori_3, tmp_3.A1), axis=0))
-                    
-        # tmp = get_flux(get_fft(idx_signal), PhaseOffset)
-        # q.put(np.concatenate((pos, ori, tmp), axis=0))
+            mat = np.matmul(mat_mul, DrfToAxis7)
+            pos = mat.T[3][:3]
+            ori = mat.T[2][:3]
+            tmp = get_theoretical_field(coil_model, pos, ori)
+            
+            mat_2 = np.matmul(mat_mul, DrfToAxis7_second_sensor)
+            pos_2 = mat_2.T[3][:3]
+            ori_2 = mat_2.T[2][:3]
+            tmp_2 = get_theoretical_field(coil_model, pos_2, ori_2)
+            
+            mat_3 = np.matmul(mat_mul, DrfToAxis7_third_sensor)
+            pos_3 = mat_3.T[3][:3]
+            ori_3 = mat_3.T[2][:3]
+            tmp_3 = get_theoretical_field(coil_model, pos_3, ori_3)
+            
+            fig['data'][3]['x'] = [pos[0]]
+            fig['data'][3]['y'] = [pos[1]]
+            fig['data'][3]['z'] = [pos[2]]
+            fig['data'][3]['u'] = [ori[0]]
+            fig['data'][3]['v'] = [ori[1]]
+            fig['data'][3]['w'] = [ori[2]]
+            
+            fig['data'][4]['x'] = [pos[0]]
+            fig['data'][4]['y'] = [pos[1]]
+            fig['data'][4]['z'] = [pos[2]]
+            fig['data'][4]['u'] = [ori[0]]
+            fig['data'][4]['v'] = [ori[1]]
+            fig['data'][4]['w'] = [ori[2]]
+            
+            fig['data'][5]['x'] = [pos[0]]
+            fig['data'][5]['y'] = [pos[1]]
+            fig['data'][5]['z'] = [pos[2]]
+            fig['data'][5]['u'] = [ori[0]]
+            fig['data'][5]['v'] = [ori[1]]
+            fig['data'][5]['w'] = [ori[2]]        
+            
+            if pos[0] >= cube.origin_corner[0] and pos[0] <= cube.origin_corner[0]+cube.side_length:
+                if pos[1] >= cube.origin_corner[1] and pos[1] <= cube.origin_corner[1]+cube.side_length:
+                    if pos[2] >= cube.origin_corner[2] and pos[2] <= cube.origin_corner[2]+cube.side_length:
+                        q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
+                        
+            if pos_2[0] >= cube.origin_corner[0] and pos_2[0] <= cube.origin_corner[0]+cube.side_length:
+                if pos_2[1] >= cube.origin_corner[1] and pos_2[1] <= cube.origin_corner[1]+cube.side_length:
+                    if pos_2[2] >= cube.origin_corner[2] and pos_2[2] <= cube.origin_corner[2]+cube.side_length:
+                        q.put(np.concatenate((pos_2, ori_2, tmp_2.A1), axis=0))
+                        
+            if pos_3[0] >= cube.origin_corner[0] and pos_3[0] <= cube.origin_corner[0]+cube.side_length:
+                if pos_3[1] >= cube.origin_corner[1] and pos_3[1] <= cube.origin_corner[1]+cube.side_length:
+                    if pos_3[2] >= cube.origin_corner[2] and pos_3[2] <= cube.origin_corner[2]+cube.side_length:
+                        q.put(np.concatenate((pos_3, ori_3, tmp_3.A1), axis=0))
+                        
+            # tmp = get_flux(get_fft(idx_signal), PhaseOffset)
+            # q.put(np.concatenate((pos, ori, tmp), axis=0))
         
         return fig
         
@@ -266,8 +269,8 @@ webbrowser.open('http://127.0.0.1:8050/', new=2)
 app.run_server(debug=True, use_reloader=False)
 
 # save state of the cube in case of interrpution
-np.savetxt(FILENAME + str(times) + ".csv", np.concatenate((cube.points, cube.measures), 1))
-
+np.savetxt(FILENAME + ".csv", np.concatenate((cube.points, cube.measures), 1))
+print('done.')
 # save points in a .csv file and interpolate
 # pred, unc = cube.interpolation()
 # np.savetxt('predictions.csv', pred)
