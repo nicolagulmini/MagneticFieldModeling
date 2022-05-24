@@ -38,7 +38,7 @@ DrfToAxis7_third_sensor = np.array([
     [0,	0,	0,	1]
     ])
 
-
+# guess the first two columns dont matter
 
 DrfToAxis8 = np.array([
     [1,	0,					0.00949848325487834,	-8.56564514087011],
