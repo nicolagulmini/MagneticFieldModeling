@@ -52,7 +52,10 @@ class cube_to_calib:
         query = np.round_((points[:, :3] - np.array([self.origin_corner for _ in range(points.shape[0])])) / self.point_density, decimals = 0)
         index = sum([query[:, i] * self.number_of_points_along_an_axis ** i for i in range(3)]).astype(int) # shape = shape.points[0] i.e. one index for each point of the batch
         self.contributions[index] += abs(points[:, 3:6]) / self.minimum_number_of_points # cause points are (x, y, z, orientation_x, orientation_y, orientation_z, measurements...)
-        # should ignore points
+        # should ignore points to avoid out of index
+        for point in self.contributions:
+            print('[%.2f, %.2f, %.2f],'% (point[0], point[1], point[2]))
+        print()
         
     def percentages(self):
         c_x, c_y, c_z = self.contributions.T 

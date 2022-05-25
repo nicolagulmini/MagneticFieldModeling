@@ -14,6 +14,7 @@ from queue import Queue
 import time
 import pyigtl
 import os
+from flask import request
 
 FILENAME = 'sampled_points'
 
@@ -67,11 +68,11 @@ PhaseOffset = 0
 # task1.StartTask()
 
 AMOUNT_OF_NEW_POINTS = 10
-print("Press CTRL+C when satisfied about the amount of gathered points. Suddenly the interpolation will be computed and the data will be stored in a .csv file.")
+print("Press the STOP button (or CTRL+C) when satisfied about the amount of gathered points. Suddenly the interpolation will be computed and the data will be stored in a .csv file.")
 
 global q, cube, coil_model, client
 q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
-cube = CubeModel.cube_to_calib(np.array([-100., -100., 0.]), side_length=200., point_density=20., minimum_number_of_points=1)
+cube = CubeModel.cube_to_calib(np.array([-100., -100., 0.]), side_length=200., point_density=40., minimum_number_of_points=1)
 coil_model = Coil.CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
                                       'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]}) # mm
 
@@ -106,12 +107,15 @@ app.layout = html.Div(html.Div(children=[html.H1('Magnetic Field Freehand Calibr
                                                'font-family': 'monospace'
                                                }
                                         ),
-                                         daq.StopButton(id='my-stop-button-1',label='Default',n_clicks=0),
-                                html.Div(id='live-update-text'),
-                                dcc.Graph(id='plot'),
-                                dcc.Interval(id='interval-component',
-                                             interval = 25, # ms
-                                             n_intervals = 0)
+                                         html.Div(id='live-update-text'),
+                                         dcc.Interval(id='interval-component',
+                                                      interval = 25, # ms
+                                                      n_intervals = 0),
+                                         daq.StopButton(id='stop-button',
+                                                        #label='',
+                                                        n_clicks=0),
+                                         html.Div(id='output of the button'),
+                                         dcc.Graph(id='plot')
                                 ]))
 
 fig = make_subplots(horizontal_spacing=0.01, rows=1, cols=3, specs=[[{'is_3d': True}, {'is_3d': True}, {'is_3d':True}]])
@@ -262,10 +266,19 @@ def update_metrics(n):
             html.H2("coverage z: "+str(perc_coverage_z)+"%", style={'textAlign': 'left', 'color': '#009BAC', 'font-family': 'monospace', 'padding': '5px', 'fontSize': '16px'}),
             ]
 
+@app.callback(
+    Output('output of the button', 'children'),
+    Input('stop-button', 'n_clicks')
+)
+def update_output(n_clicks):
+    if n_clicks >= 1:
+        func = request.environ.get('werkzeug.server.shutdown')
+        func() # it is deprecated but for now it works and idk how to do it in another way...
+        return [html.H3('Saving %.0f points before quitting the calibration...' % cube.points.shape[0], style={'textAlign': 'left', 'color': '#FF2D00', 'font-family': 'monospace', 'padding': '5px', 'fontSize': '14px'})]
+
 webbrowser.open('http://127.0.0.1:8050/', new=2)
 app.run_server(debug=True, use_reloader=False)
 
 # save state of the cube in case of interrpution
 np.savetxt(FILENAME + ".csv", np.concatenate((cube.points, cube.measures), 1))
-print('just saved %.0f points' % (cube.points.shape[0]))
-print('done.')
+print('Just saved %.0f points' % (cube.points.shape[0]))
