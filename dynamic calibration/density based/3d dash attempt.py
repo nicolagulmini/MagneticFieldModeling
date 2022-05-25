@@ -3,6 +3,7 @@ import webbrowser
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
+import dash_daq as daq
 import plotly.graph_objects as go
 import plotly.figure_factory as ff
 from plotly.subplots import make_subplots
@@ -70,7 +71,7 @@ print("Press CTRL+C when satisfied about the amount of gathered points. Suddenly
 
 global q, cube, coil_model, client
 q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
-cube = CubeModel.cube_to_calib(np.array([-50., -50., 50.]), side_length=100., point_density=20., minimum_number_of_points=1)
+cube = CubeModel.cube_to_calib(np.array([-100., -100., 0.]), side_length=200., point_density=20., minimum_number_of_points=1)
 coil_model = Coil.CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
                                       'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]}) # mm
 
@@ -105,6 +106,7 @@ app.layout = html.Div(html.Div(children=[html.H1('Magnetic Field Freehand Calibr
                                                'font-family': 'monospace'
                                                }
                                         ),
+                                         daq.StopButton(id='my-stop-button-1',label='Default',n_clicks=0),
                                 html.Div(id='live-update-text'),
                                 dcc.Graph(id='plot'),
                                 dcc.Interval(id='interval-component',
@@ -137,24 +139,22 @@ fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
 
 if os.path.exists("./" + FILENAME + ".csv"):
     cube.add_batch(np.loadtxt("./" + FILENAME + ".csv"))
-    c_x, c_y, c_z = cube.contributions.T
-    
-    perc_coverage_x = round(float(sum(np.minimum(c_x, np.ones(c_x.shape)))/c_x.shape)*100, 2)
-    perc_coverage_y = round(float(sum(np.minimum(c_y, np.ones(c_y.shape)))/c_y.shape)*100, 2)
-    perc_coverage_z = round(float(sum(np.minimum(c_z, np.ones(c_z.shape)))/c_z.shape)*100, 2)
+    print('just loaded %.0f points' % (cube.points.shape[0]))
+    perc_coverage_x, perc_coverage_y, perc_coverage_z = cube.percentages()
     print("Starting from coverage (c_x, c_y, c_z) = (%.2f, %.2f, %.2f)" % (perc_coverage_x, perc_coverage_y, perc_coverage_z))
     
+    c_x, c_y, c_z = cube.contributions.T
     unc_x = 1.-np.minimum(c_x, np.ones(c_x.shape))
     unc_y = 1.-np.minimum(c_y, np.ones(c_x.shape))
     unc_z = 1.-np.minimum(c_z, np.ones(c_x.shape))
     
     # update markers' sizes and colors
     fig['data'][0]['marker']['color'] = unc_x
-    fig['data'][0]['marker']['size'] = 10
+    fig['data'][0]['marker']['size'] = 20
     fig['data'][1]['marker']['color'] = unc_y
-    fig['data'][1]['marker']['size'] = 10
+    fig['data'][1]['marker']['size'] = 20
     fig['data'][2]['marker']['color'] = unc_z
-    fig['data'][2]['marker']['size'] = 10
+    fig['data'][2]['marker']['size'] = 20
 
 client = pyigtl.OpenIGTLinkClient("127.0.0.1", 18944)
 
@@ -169,10 +169,10 @@ def update_graph_live(n_intervals):
         
         # from the instrument
         message = client.wait_for_message("SensorToReference", timeout=5)
+        #print(message)
         
         # pos = message.matrix.T[3][:3]
         # ori = message.matrix.T[2][:3]
-        
         if message is not None:
             
             mat_mul = np.matmul(referenceToBoard, message.matrix)
@@ -190,32 +190,31 @@ def update_graph_live(n_intervals):
             mat_3 = np.matmul(mat_mul, DrfToAxis7_third_sensor)
             pos_3 = mat_3.T[3][:3]
             ori_3 = mat_3.T[2][:3]
-            tmp_3 = get_theoretical_field(coil_model, pos_3, ori_3)
-            
-            fig['data'][3]['x'] = [pos[0]]
-            fig['data'][3]['y'] = [pos[1]]
-            fig['data'][3]['z'] = [pos[2]]
-            fig['data'][3]['u'] = [ori[0]]
-            fig['data'][3]['v'] = [ori[1]]
-            fig['data'][3]['w'] = [ori[2]]
-            
-            fig['data'][4]['x'] = [pos[0]]
-            fig['data'][4]['y'] = [pos[1]]
-            fig['data'][4]['z'] = [pos[2]]
-            fig['data'][4]['u'] = [ori[0]]
-            fig['data'][4]['v'] = [ori[1]]
-            fig['data'][4]['w'] = [ori[2]]
-            
-            fig['data'][5]['x'] = [pos[0]]
-            fig['data'][5]['y'] = [pos[1]]
-            fig['data'][5]['z'] = [pos[2]]
-            fig['data'][5]['u'] = [ori[0]]
-            fig['data'][5]['v'] = [ori[1]]
-            fig['data'][5]['w'] = [ori[2]]        
+            tmp_3 = get_theoretical_field(coil_model, pos_3, ori_3)        
             
             if pos[0] >= cube.origin_corner[0] and pos[0] <= cube.origin_corner[0]+cube.side_length:
                 if pos[1] >= cube.origin_corner[1] and pos[1] <= cube.origin_corner[1]+cube.side_length:
                     if pos[2] >= cube.origin_corner[2] and pos[2] <= cube.origin_corner[2]+cube.side_length:
+                        fig['data'][3]['x'] = [pos[0]]
+                        fig['data'][3]['y'] = [pos[1]]
+                        fig['data'][3]['z'] = [pos[2]]
+                        fig['data'][3]['u'] = [ori[0]]
+                        fig['data'][3]['v'] = [ori[1]]
+                        fig['data'][3]['w'] = [ori[2]]
+                        
+                        fig['data'][4]['x'] = [pos[0]]
+                        fig['data'][4]['y'] = [pos[1]]
+                        fig['data'][4]['z'] = [pos[2]]
+                        fig['data'][4]['u'] = [ori[0]]
+                        fig['data'][4]['v'] = [ori[1]]
+                        fig['data'][4]['w'] = [ori[2]]
+                        
+                        fig['data'][5]['x'] = [pos[0]]
+                        fig['data'][5]['y'] = [pos[1]]
+                        fig['data'][5]['z'] = [pos[2]]
+                        fig['data'][5]['u'] = [ori[0]]
+                        fig['data'][5]['v'] = [ori[1]]
+                        fig['data'][5]['w'] = [ori[2]]
                         q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
                         
             if pos_2[0] >= cube.origin_corner[0] and pos_2[0] <= cube.origin_corner[0]+cube.side_length:
@@ -230,7 +229,7 @@ def update_graph_live(n_intervals):
                         
             # tmp = get_flux(get_fft(idx_signal), PhaseOffset)
             # q.put(np.concatenate((pos, ori, tmp), axis=0))
-        
+    
         return fig
         
     new_raw_points = np.array([q.get() for _ in range(AMOUNT_OF_NEW_POINTS)])
@@ -240,16 +239,16 @@ def update_graph_live(n_intervals):
     c_x, c_y, c_z = cube.contributions.T
 
     unc_x = 1.-np.minimum(c_x, np.ones(c_x.shape))
-    unc_y = 1.-np.minimum(c_y, np.ones(c_x.shape))
-    unc_z = 1.-np.minimum(c_z, np.ones(c_x.shape))
+    unc_y = 1.-np.minimum(c_y, np.ones(c_y.shape))
+    unc_z = 1.-np.minimum(c_z, np.ones(c_z.shape))
 
     # update markers' sizes and colors
     fig['data'][0]['marker']['color'] = unc_x
-    fig['data'][0]['marker']['size'] = 10
+    fig['data'][0]['marker']['size'] = 20
     fig['data'][1]['marker']['color'] = unc_y
-    fig['data'][1]['marker']['size'] = 10
+    fig['data'][1]['marker']['size'] = 20
     fig['data'][2]['marker']['color'] = unc_z
-    fig['data'][2]['marker']['size'] = 10
+    fig['data'][2]['marker']['size'] = 20
         
     return fig
 
@@ -268,8 +267,5 @@ app.run_server(debug=True, use_reloader=False)
 
 # save state of the cube in case of interrpution
 np.savetxt(FILENAME + ".csv", np.concatenate((cube.points, cube.measures), 1))
+print('just saved %.0f points' % (cube.points.shape[0]))
 print('done.')
-# save points in a .csv file and interpolate
-# pred, unc = cube.interpolation()
-# np.savetxt('predictions.csv', pred)
-# np.savetxt('unceratinty.csv', unc)

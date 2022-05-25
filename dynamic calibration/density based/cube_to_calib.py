@@ -55,7 +55,11 @@ class cube_to_calib:
         # should ignore points
         
     def percentages(self):
-        return
+        c_x, c_y, c_z = self.contributions.T 
+        perc_coverage_x = sum(np.minimum(c_x, np.ones(c_x.shape)))/c_x.shape*100
+        perc_coverage_y = sum(np.minimum(c_y, np.ones(c_y.shape)))/c_y.shape*100
+        perc_coverage_z = sum(np.minimum(c_z, np.ones(c_z.shape)))/c_z.shape*100
+        return perc_coverage_x, perc_coverage_y, perc_coverage_z
         
     def update_points(self, new_points, new_measures):
         if self.points.shape[0] == 0:
