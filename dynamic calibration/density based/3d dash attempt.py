@@ -256,10 +256,8 @@ def update_graph_live(n_intervals):
 @app.callback(Output('live-update-text', 'children'),
               Input('interval-component', 'n_intervals'))
 def update_metrics(n):
-    c_x, c_y, c_z = cube.contributions.T 
-    perc_coverage_x = round(float(sum(np.minimum(c_x, np.ones(c_x.shape)))/c_x.shape)*100, 2)
-    perc_coverage_y = round(float(sum(np.minimum(c_y, np.ones(c_y.shape)))/c_y.shape)*100, 2)
-    perc_coverage_z = round(float(sum(np.minimum(c_z, np.ones(c_z.shape)))/c_z.shape)*100, 2)
+    perc_coverage_x, perc_coverage_y, perc_coverage_z = cube.percentages()
+    perc_coverage_x, perc_coverage_y, perc_coverage_z = round(float(perc_coverage_x), 2), round(float(perc_coverage_y), 2), round(float(perc_coverage_z), 2)
     return [html.H2("coverage x: "+str(perc_coverage_x)+"%", style={'textAlign': 'left', 'color': '#009BAC', 'font-family': 'monospace', 'padding': '5px', 'fontSize': '16px'}),
             html.H2("coverage y: "+str(perc_coverage_y)+"%", style={'textAlign': 'left', 'color': '#009BAC', 'font-family': 'monospace', 'padding': '5px', 'fontSize': '16px'}),
             html.H2("coverage z: "+str(perc_coverage_z)+"%", style={'textAlign': 'left', 'color': '#009BAC', 'font-family': 'monospace', 'padding': '5px', 'fontSize': '16px'}),
