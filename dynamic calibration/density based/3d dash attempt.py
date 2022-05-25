@@ -281,5 +281,10 @@ app.run_server(debug=True, use_reloader=False)
 
 # save state of the cube in case of interrpution
 print(cube.percentages())
+print()
+for point in cube.contributions:
+    print('[%.2f, %.2f, %.2f],'% (point[0], point[1], point[2]))
+print()
+
 np.savetxt(FILENAME + ".csv", np.concatenate((cube.points, cube.measures), 1))
 print('Just saved %.0f points' % (cube.points.shape[0]))
