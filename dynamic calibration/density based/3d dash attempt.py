@@ -142,7 +142,9 @@ fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), showlegend=False, uirevision=
 fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
 
 if os.path.exists("./" + FILENAME + ".csv"):
-    cube.add_batch(np.loadtxt("./" + FILENAME + ".csv"))
+    points = np.loadtxt("./" + FILENAME + ".csv")
+    for i in range(points.shape[0]-1):
+        cube.add_batch(points[int(10*i):int(10*(i+1))])
     print('just loaded %.0f points' % (cube.points.shape[0]))
     perc_coverage_x, perc_coverage_y, perc_coverage_z = cube.percentages()
     print("Starting from coverage (c_x, c_y, c_z) = (%.2f, %.2f, %.2f)" % (perc_coverage_x, perc_coverage_y, perc_coverage_z))
