@@ -25,29 +25,6 @@ DrfToAxis7 = np.array([
     [0,	0,					0,					1]
     ])
 
-DrfToAxis7_second_sensor = np.array([
-    [0,	1,	0,	-8.54323644559691],
-    [1,	0,	0,	1.90874592349076],
-    [0,	0,	1,	1.35779932552848],
-    [0,	0,	0,	1]
-    ])
-
-DrfToAxis7_third_sensor = np.array([
-    [0,	0,	1,	-8.54323644559691],
-    [0,	1,	0,	1.90874592349076],
-    [1,	0,	0,	-9.35779932552848],
-    [0,	0,	0,	1]
-    ])
-
-# guess the first two columns dont matter
-
-DrfToAxis8 = np.array([
-    [1,	0,					0.00949848325487834,	-8.56564514087011],
-    [0,	-0.999786950137733,	-0.0206401524985414,	-4.34460054830087],
-    [0,	-0.0206410836510488,	0.999741848139155,	1.25091495264286],
-    [0,	0,                  0,                   1]
-    ])
-
 channeldict = {0: 4, 1: 0, 2: 8, 3: 1, 4: 9, 5: 2, 6: 10, 7: 11, 8: 3, 9: 8, 10: 12, 11: 13, 12: 5, 13: 14, 14: 6, 15: 15, 16: 7}
 sampleFreq = 40000
 noSamples = 4000
@@ -59,13 +36,13 @@ sensor_channel = 7
 sensor_channel = channeldict[sensor_channel]
 PhaseOffset = 0
 
-# task = NIDAQ(dev_name = deviceID, channels = np.array([4, str(sensor_channel)]), sampleFreq = sampleFreq, data_len = noSamples)
-# task.SetAnalogInputs()
-# task.StartTask()
+task = NIDAQ(dev_name = deviceID, channels = np.array([4, str(sensor_channel)]), sampleFreq = sampleFreq, data_len = noSamples)
+task.SetAnalogInputs()
+task.StartTask()
 
-# task1 = NIDAQ(dev_name=deviceID)
-# task1.SetClockOutput()
-# task1.StartTask()
+task1 = NIDAQ(dev_name=deviceID)
+task1.SetClockOutput()
+task1.StartTask()
 
 AMOUNT_OF_NEW_POINTS = 10
 print("Press the STOP button (or CTRL+C) when satisfied about the amount of gathered points. Suddenly the interpolation will be computed and the data will be stored in a .csv file.")
@@ -143,7 +120,7 @@ fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
 
 if os.path.exists("./" + FILENAME + ".csv"):
     points = np.loadtxt("./" + FILENAME + ".csv")
-    for i in range(int(points.shape[0]/10-1)): # if there are too many points the loading becomes wrong
+    for i in range(int(points.shape[0]/10-1)):
         tmp_points = points[int(10*i):int(10*(i+1))]
         print(tmp_points.shape)
         cube.add_batch(tmp_points)
@@ -177,18 +154,14 @@ def update_graph_live(n_intervals):
         
         # from the instrument
         message = client.wait_for_message("SensorToReference", timeout=5)
-        #print(message)
         
-        # pos = message.matrix.T[3][:3]
-        # ori = message.matrix.T[2][:3]
         if message is not None:
             
             mat_mul = np.matmul(referenceToBoard, message.matrix)
         
             mat = np.matmul(mat_mul, DrfToAxis7)
             pos = mat.T[3][:3]
-            ori = mat.T[2][:3]
-            tmp = get_theoretical_field(coil_model, pos, ori)       
+            ori = mat.T[2][:3]     
             
             if pos[0] >= cube.origin_corner[0] and pos[0] <= cube.origin_corner[0]+cube.side_length:
                 if pos[1] >= cube.origin_corner[1] and pos[1] <= cube.origin_corner[1]+cube.side_length:
@@ -213,10 +186,9 @@ def update_graph_live(n_intervals):
                         fig['data'][5]['u'] = [ori[0]]
                         fig['data'][5]['v'] = [ori[1]]
                         fig['data'][5]['w'] = [ori[2]]
-                        q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
                         
-            # tmp = get_flux(get_fft(idx_signal), PhaseOffset)
-            # q.put(np.concatenate((pos, ori, tmp), axis=0))
+                        tmp = get_flux(get_fft(idx_signal), PhaseOffset)
+                        q.put(np.concatenate((pos, ori, tmp), axis=0))
     
         return fig
         
