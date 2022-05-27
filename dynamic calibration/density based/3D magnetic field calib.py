@@ -143,8 +143,10 @@ fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
 
 if os.path.exists("./" + FILENAME + ".csv"):
     points = np.loadtxt("./" + FILENAME + ".csv")
-    for i in range(points.shape[0]-1):
-        cube.add_batch(points[int(10*i):int(10*(i+1))])
+    for i in range(int(points.shape[0]/10-1)): # if there are too many points the loading becomes wrong
+        tmp_points = points[int(10*i):int(10*(i+1))]
+        print(tmp_points.shape)
+        cube.add_batch(tmp_points)
     print('just loaded %.0f points' % (cube.points.shape[0]))
     perc_coverage_x, perc_coverage_y, perc_coverage_z = cube.percentages()
     print("Starting from coverage (c_x, c_y, c_z) = (%.2f, %.2f, %.2f)" % (perc_coverage_x, perc_coverage_y, perc_coverage_z))
@@ -186,17 +188,7 @@ def update_graph_live(n_intervals):
             mat = np.matmul(mat_mul, DrfToAxis7)
             pos = mat.T[3][:3]
             ori = mat.T[2][:3]
-            tmp = get_theoretical_field(coil_model, pos, ori)
-            
-            mat_2 = np.matmul(mat_mul, DrfToAxis7_second_sensor)
-            pos_2 = mat_2.T[3][:3]
-            ori_2 = mat_2.T[2][:3]
-            tmp_2 = get_theoretical_field(coil_model, pos_2, ori_2)
-            
-            mat_3 = np.matmul(mat_mul, DrfToAxis7_third_sensor)
-            pos_3 = mat_3.T[3][:3]
-            ori_3 = mat_3.T[2][:3]
-            tmp_3 = get_theoretical_field(coil_model, pos_3, ori_3)        
+            tmp = get_theoretical_field(coil_model, pos, ori)       
             
             if pos[0] >= cube.origin_corner[0] and pos[0] <= cube.origin_corner[0]+cube.side_length:
                 if pos[1] >= cube.origin_corner[1] and pos[1] <= cube.origin_corner[1]+cube.side_length:
@@ -222,16 +214,6 @@ def update_graph_live(n_intervals):
                         fig['data'][5]['v'] = [ori[1]]
                         fig['data'][5]['w'] = [ori[2]]
                         q.put(np.concatenate((pos, ori, tmp.A1), axis=0))
-                        
-            if pos_2[0] >= cube.origin_corner[0] and pos_2[0] <= cube.origin_corner[0]+cube.side_length:
-                if pos_2[1] >= cube.origin_corner[1] and pos_2[1] <= cube.origin_corner[1]+cube.side_length:
-                    if pos_2[2] >= cube.origin_corner[2] and pos_2[2] <= cube.origin_corner[2]+cube.side_length:
-                        q.put(np.concatenate((pos_2, ori_2, tmp_2.A1), axis=0))
-                        
-            if pos_3[0] >= cube.origin_corner[0] and pos_3[0] <= cube.origin_corner[0]+cube.side_length:
-                if pos_3[1] >= cube.origin_corner[1] and pos_3[1] <= cube.origin_corner[1]+cube.side_length:
-                    if pos_3[2] >= cube.origin_corner[2] and pos_3[2] <= cube.origin_corner[2]+cube.side_length:
-                        q.put(np.concatenate((pos_3, ori_3, tmp_3.A1), axis=0))
                         
             # tmp = get_flux(get_fft(idx_signal), PhaseOffset)
             # q.put(np.concatenate((pos, ori, tmp), axis=0))
@@ -280,13 +262,6 @@ def update_output(n_clicks):
 
 webbrowser.open('http://127.0.0.1:8050/', new=2)
 app.run_server(debug=True, use_reloader=False)
-
-# save state of the cube in case of interrpution
-print(cube.percentages())
-print()
-for point in cube.contributions:
-    print('[%.2f, %.2f, %.2f],'% (point[0], point[1], point[2]))
-print()
 
 np.savetxt(FILENAME + ".csv", np.concatenate((cube.points, cube.measures), 1))
 print('Just saved %.0f points' % (cube.points.shape[0]))

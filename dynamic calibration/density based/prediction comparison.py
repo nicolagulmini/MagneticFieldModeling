@@ -8,7 +8,7 @@ import CoilModel as Coil
 # import tensorflow as tf
 # from tensorflow import keras
 
-filename = "33"
+filename = "sampled_points"
 
 def get_theoretical_field(model, point, ori=None):
     tmp = np.concatenate(model.coil_field_total(point[0], point[1], point[2]), axis=1).T
