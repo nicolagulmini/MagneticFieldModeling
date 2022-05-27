@@ -72,7 +72,7 @@ print("Press the STOP button (or CTRL+C) when satisfied about the amount of gath
 
 global q, cube, coil_model, client
 q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
-cube = CubeModel.cube_to_calib(np.array([-100., -100., 0.]), side_length=200., point_density=40., minimum_number_of_points=1)
+cube = CubeModel.cube_to_calib(np.array([-100., -100., 50.]), side_length=200., point_density=40., minimum_number_of_points=1)
 coil_model = Coil.CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
                                       'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]}) # mm
 
@@ -143,9 +143,8 @@ fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
 
 if os.path.exists("./" + FILENAME + ".csv"):
     points = np.loadtxt("./" + FILENAME + ".csv")
-    for i in range(int(points.shape[0]/10-1)): # if there are too many points the loading becomes wrong
+    for i in range(int(points.shape[0]/10)): # if there are too many points the loading becomes wrong
         tmp_points = points[int(10*i):int(10*(i+1))]
-        print(tmp_points.shape)
         cube.add_batch(tmp_points)
     print('just loaded %.0f points' % (cube.points.shape[0]))
     perc_coverage_x, perc_coverage_y, perc_coverage_z = cube.percentages()

@@ -27,13 +27,11 @@ def get_metrics(pred, unc, x_val, y_val, n_diag_points, den_to_normalize_val):
     pred_val, pred_x, pred_y, pred_z = pred[:x_val.shape[0]], pred[x_val.shape[0]:x_val.shape[0]+n_diag_points], pred[x_val.shape[0]+n_diag_points:x_val.shape[0]+int(2*n_diag_points)], pred[x_val.shape[0]+int(2*n_diag_points):]
     unc_val, unc_x, unc_y, unc_z = unc[:x_val.shape[0]], unc[x_val.shape[0]:x_val.shape[0]+n_diag_points], unc[x_val.shape[0]+n_diag_points:x_val.shape[0]+int(2*n_diag_points)], unc[x_val.shape[0]+int(2*n_diag_points):]
     
-    mae_per_point = [MAE(pred_val[i], y_val[i]) for i in range(y_val.shape[0])]
-    mae = sum(mae_per_point)/len(mae_per_point)
-    mae = mae / den_to_normalize_val * 100
+    mae_per_point = [MAE(pred_val[i], y_val[i])/den_to_normalize_val for i in range(y_val.shape[0])]
+    mae = sum(mae_per_point)/len(mae_per_point) * 100
     
-    rmse_per_point = [MSE(pred_val[i], y_val[i], squared=False) for i in range(y_val.shape[0])]
-    rmse = sum(rmse_per_point)/len(rmse_per_point)
-    rmse = rmse / den_to_normalize_val * 100
+    rmse_per_point = [MSE(pred_val[i], y_val[i], squared=False)/den_to_normalize_val for i in range(y_val.shape[0])]
+    rmse = sum(rmse_per_point)/len(rmse_per_point) * 100
     
     return pred_val, pred_x, pred_y, pred_z, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point
     
