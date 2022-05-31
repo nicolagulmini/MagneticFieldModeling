@@ -49,7 +49,7 @@ print("Press the STOP button (or CTRL+C) when satisfied about the amount of gath
 
 global q, cube, coil_model, client
 q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
-cube = CubeModel.cube_to_calib(np.array([-100., -100., 0.]), side_length=200., point_density=40., minimum_number_of_points=1)
+cube = CubeModel.cube_to_calib(np.array([-50., -50., 100.]), side_length=100., point_density=80., minimum_number_of_points=1)
 coil_model = Coil.CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
                                       'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]}) # mm
 
@@ -173,30 +173,29 @@ def update_graph_live(n_intervals):
             pos = .5*(pos_1+pos_2)
             ori = .5*(ori_1+ori_2)
             
-            fig['data'][3]['x'] = [pos[0]]
-            fig['data'][3]['y'] = [pos[1]]
-            fig['data'][3]['z'] = [pos[2]]
-            fig['data'][3]['u'] = [ori[0]]
-            fig['data'][3]['v'] = [ori[1]]
-            fig['data'][3]['w'] = [ori[2]]
-            
-            fig['data'][4]['x'] = [pos[0]]
-            fig['data'][4]['y'] = [pos[1]]
-            fig['data'][4]['z'] = [pos[2]]
-            fig['data'][4]['u'] = [ori[0]]
-            fig['data'][4]['v'] = [ori[1]]
-            fig['data'][4]['w'] = [ori[2]]
-            
-            fig['data'][5]['x'] = [pos[0]]
-            fig['data'][5]['y'] = [pos[1]]
-            fig['data'][5]['z'] = [pos[2]]
-            fig['data'][5]['u'] = [ori[0]]
-            fig['data'][5]['v'] = [ori[1]]
-            fig['data'][5]['w'] = [ori[2]]
-            
             if pos[0] >= cube.origin_corner[0] and pos[0] <= cube.origin_corner[0]+cube.side_length:
                 if pos[1] >= cube.origin_corner[1] and pos[1] <= cube.origin_corner[1]+cube.side_length:
                     if pos[2] >= cube.origin_corner[2] and pos[2] <= cube.origin_corner[2]+cube.side_length:
+                        fig['data'][3]['x'] = [pos[0]]
+                        fig['data'][3]['y'] = [pos[1]]
+                        fig['data'][3]['z'] = [pos[2]]
+                        fig['data'][3]['u'] = [ori[0]]
+                        fig['data'][3]['v'] = [ori[1]]
+                        fig['data'][3]['w'] = [ori[2]]
+                        
+                        fig['data'][4]['x'] = [pos[0]]
+                        fig['data'][4]['y'] = [pos[1]]
+                        fig['data'][4]['z'] = [pos[2]]
+                        fig['data'][4]['u'] = [ori[0]]
+                        fig['data'][4]['v'] = [ori[1]]
+                        fig['data'][4]['w'] = [ori[2]]
+                        
+                        fig['data'][5]['x'] = [pos[0]]
+                        fig['data'][5]['y'] = [pos[1]]
+                        fig['data'][5]['z'] = [pos[2]]
+                        fig['data'][5]['u'] = [ori[0]]
+                        fig['data'][5]['v'] = [ori[1]]
+                        fig['data'][5]['w'] = [ori[2]]
                         q.put(np.concatenate((pos, ori, tmp), axis=0))
     
         return fig
