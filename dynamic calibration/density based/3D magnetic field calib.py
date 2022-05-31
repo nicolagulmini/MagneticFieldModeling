@@ -161,34 +161,35 @@ def update_graph_live(n_intervals):
         
             mat = np.matmul(mat_mul, DrfToAxis7)
             pos = mat.T[3][:3]
-            ori = mat.T[2][:3]     
+            ori = mat.T[2][:3] 
+            
+            fig['data'][3]['x'] = [pos[0]]
+            fig['data'][3]['y'] = [pos[1]]
+            fig['data'][3]['z'] = [pos[2]]
+            fig['data'][3]['u'] = [ori[0]]
+            fig['data'][3]['v'] = [ori[1]]
+            fig['data'][3]['w'] = [ori[2]]
+            
+            fig['data'][4]['x'] = [pos[0]]
+            fig['data'][4]['y'] = [pos[1]]
+            fig['data'][4]['z'] = [pos[2]]
+            fig['data'][4]['u'] = [ori[0]]
+            fig['data'][4]['v'] = [ori[1]]
+            fig['data'][4]['w'] = [ori[2]]
+            
+            fig['data'][5]['x'] = [pos[0]]
+            fig['data'][5]['y'] = [pos[1]]
+            fig['data'][5]['z'] = [pos[2]]
+            fig['data'][5]['u'] = [ori[0]]
+            fig['data'][5]['v'] = [ori[1]]
+            fig['data'][5]['w'] = [ori[2]]
             
             if pos[0] >= cube.origin_corner[0] and pos[0] <= cube.origin_corner[0]+cube.side_length:
                 if pos[1] >= cube.origin_corner[1] and pos[1] <= cube.origin_corner[1]+cube.side_length:
                     if pos[2] >= cube.origin_corner[2] and pos[2] <= cube.origin_corner[2]+cube.side_length:
-                        fig['data'][3]['x'] = [pos[0]]
-                        fig['data'][3]['y'] = [pos[1]]
-                        fig['data'][3]['z'] = [pos[2]]
-                        fig['data'][3]['u'] = [ori[0]]
-                        fig['data'][3]['v'] = [ori[1]]
-                        fig['data'][3]['w'] = [ori[2]]
-                        
-                        fig['data'][4]['x'] = [pos[0]]
-                        fig['data'][4]['y'] = [pos[1]]
-                        fig['data'][4]['z'] = [pos[2]]
-                        fig['data'][4]['u'] = [ori[0]]
-                        fig['data'][4]['v'] = [ori[1]]
-                        fig['data'][4]['w'] = [ori[2]]
-                        
-                        fig['data'][5]['x'] = [pos[0]]
-                        fig['data'][5]['y'] = [pos[1]]
-                        fig['data'][5]['z'] = [pos[2]]
-                        fig['data'][5]['u'] = [ori[0]]
-                        fig['data'][5]['v'] = [ori[1]]
-                        fig['data'][5]['w'] = [ori[2]]
-                        
+
                         tmp = get_flux(get_fft(idx_signal), PhaseOffset)
-                        print(np.concatenate((pos, ori, tmp), axis=0))
+                        #print(np.concatenate((pos, ori, tmp), axis=0))
                         q.put(np.concatenate((pos, ori, tmp), axis=0))
     
         return fig

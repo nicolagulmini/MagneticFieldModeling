@@ -179,12 +179,17 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.xscale('log')
     plt.savefig('crbfi alpha error')
     
+    alpha_star = alphas[0] # pick the best alpha
+    for alpha in alphas:
+        if dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae'] < dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['nmae']:
+            alpha_star = alpha
+    
     # correlation error and uncertainty crbfi
     
     plt.figure()
     plt.title("RBFI nMAE and uncertainty. nMAE = " + str(round(dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae'], 4)) + " %")
-    x = dictionary_with_performances["custom radial basis function interpolator " + str(1e-10)]['uncertainty']
-    y = dictionary_with_performances["custom radial basis function interpolator " + str(1e-10)]['nmae per point']
+    x = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['uncertainty']
+    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['nmae per point']
     plt.scatter(x, y, marker='.', alpha=.5, color='black')
     plt.xlabel('uncertainty')
     plt.ylabel('nMAE')
@@ -192,8 +197,8 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     
     plt.figure()
     plt.title("RBFI nRMSE and uncertainty. nRMSE = " + str(round(dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nrmse'], 4)) + " %")
-    x = dictionary_with_performances["custom radial basis function interpolator " + str(1e-10)]['uncertainty']
-    y = dictionary_with_performances["custom radial basis function interpolator " + str(1e-10)]['nrmse per point']
+    x = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['uncertainty']
+    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['nrmse per point']
     plt.scatter(x, y, marker='.', alpha=.5, color='black')
     plt.xlabel('uncertainty')
     plt.ylabel('nRMSE')
@@ -201,8 +206,8 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     
     plt.figure()
     plt.title("RBFI nMAE and uncertainty. nMAE = " + str(round(dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae'], 4)) + " %")
-    x = dictionary_with_performances["custom radial basis function interpolator " + str(1e-10)]['uncertainty']
-    y = dictionary_with_performances["custom radial basis function interpolator " + str(1e-10)]['nmae per point']
+    x = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['uncertainty']
+    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['nmae per point']
     plt.scatter(x, y, marker='.', alpha=.5, color='black')
     plt.xlabel('uncertainty')
     plt.ylabel('nMAE')
@@ -212,8 +217,8 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     
     plt.figure()
     plt.title("RBFI nRMSE and uncertainty. nRMSE = " + str(round(dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nrmse'], 4)) + " %")
-    x = dictionary_with_performances["custom radial basis function interpolator " + str(1e-10)]['uncertainty']
-    y = dictionary_with_performances["custom radial basis function interpolator " + str(1e-10)]['nrmse per point']
+    x = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['uncertainty']
+    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['nrmse per point']
     plt.scatter(x, y, marker='.', alpha=.5, color='black')
     plt.xlabel('uncertainty')
     plt.ylabel('nRMSE')
@@ -222,7 +227,10 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.savefig('rbfi nrmse unc log')
 
     
-    alpha_star = alphas[0] # pick the best alpha
+    # only for simulated magnetic data
+    
+    '''
+    
     
     plt.figure()
     plt.title("Magnetic field prediction and comparison of RBFI - x component, first coil\n(only for simulated magnetic data)")
@@ -248,6 +256,9 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     nice_plot(range(n_diag_points), simulated_z[:,0], name='simulated', marker='^', legend_pos='upper right')
     # maybe uncertainty as confidence intervals?
     plt.savefig('rbfi pred 1st coil z comp')
+    
+    '''
+    
     
     # gaussian 
     '''
