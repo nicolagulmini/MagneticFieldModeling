@@ -122,7 +122,6 @@ if os.path.exists("./" + FILENAME + ".csv"):
     points = np.loadtxt("./" + FILENAME + ".csv")
     for i in range(int(points.shape[0]/10-1)):
         tmp_points = points[int(10*i):int(10*(i+1))]
-        print(tmp_points.shape)
         cube.add_batch(tmp_points)
     print('just loaded %.0f points' % (cube.points.shape[0]))
     perc_coverage_x, perc_coverage_y, perc_coverage_z = cube.percentages()
@@ -153,15 +152,26 @@ def update_graph_live(n_intervals):
     if len(q.queue) < AMOUNT_OF_NEW_POINTS:
         
         # from the instrument
-        message = client.wait_for_message("SensorToReference", timeout=5)
+        message_1 = client.wait_for_message("SensorToReference", timeout=5)
+        tmp = get_flux(get_fft(idx_signal), PhaseOffset)
+        message_2 = client.wait_for_message("SensorToReference", timeout=5)
         
-        if message is not None:
+        if message_1 is not None and message_2 is not None:
             
-            mat_mul = np.matmul(referenceToBoard, message.matrix)
+            mat_mul_1 = np.matmul(referenceToBoard, message_1.matrix)
         
-            mat = np.matmul(mat_mul, DrfToAxis7)
-            pos = mat.T[3][:3]
-            ori = mat.T[2][:3] 
+            mat_1 = np.matmul(mat_mul_1, DrfToAxis7)
+            pos_1 = mat_1.T[3][:3]
+            ori_1 = mat_1.T[2][:3] 
+            
+            mat_mul_2 = np.matmul(referenceToBoard, message_2.matrix)
+        
+            mat_2 = np.matmul(mat_mul_2, DrfToAxis7)
+            pos_2 = mat_2.T[3][:3]
+            ori_2 = mat_2.T[2][:3] 
+            
+            pos = .5*(pos_1+pos_2)
+            ori = .5*(ori_1+ori_2)
             
             fig['data'][3]['x'] = [pos[0]]
             fig['data'][3]['y'] = [pos[1]]
@@ -187,9 +197,6 @@ def update_graph_live(n_intervals):
             if pos[0] >= cube.origin_corner[0] and pos[0] <= cube.origin_corner[0]+cube.side_length:
                 if pos[1] >= cube.origin_corner[1] and pos[1] <= cube.origin_corner[1]+cube.side_length:
                     if pos[2] >= cube.origin_corner[2] and pos[2] <= cube.origin_corner[2]+cube.side_length:
-
-                        tmp = get_flux(get_fft(idx_signal), PhaseOffset)
-                        #print(np.concatenate((pos, ori, tmp), axis=0))
                         q.put(np.concatenate((pos, ori, tmp), axis=0))
     
         return fig
