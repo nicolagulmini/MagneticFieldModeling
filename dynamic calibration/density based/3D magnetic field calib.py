@@ -188,6 +188,7 @@ def update_graph_live(n_intervals):
                         fig['data'][5]['w'] = [ori[2]]
                         
                         tmp = get_flux(get_fft(idx_signal), PhaseOffset)
+                        print(np.concatenate((pos, ori, tmp), axis=0))
                         q.put(np.concatenate((pos, ori, tmp), axis=0))
     
         return fig
