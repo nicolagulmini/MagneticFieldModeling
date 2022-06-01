@@ -44,7 +44,7 @@ task1 = NIDAQ(dev_name=deviceID)
 task1.SetClockOutput()
 task1.StartTask()
 
-AMOUNT_OF_NEW_POINTS = 10
+AMOUNT_OF_NEW_POINTS = 50
 print("Press the STOP button (or CTRL+C) when satisfied about the amount of gathered points. Suddenly the interpolation will be computed and the data will be stored in a .csv file.")
 
 global q, cube, coil_model, client
@@ -155,49 +155,44 @@ def update_graph_live(n_intervals):
         message_1 = client.wait_for_message("SensorToReference", timeout=5)
         # print(message_1['Timestamp'])
         tmp = get_flux(get_fft(idx_signal), PhaseOffset)
-        print(idx_signal)
+        # print(idx_signal)
         message_2 = client.wait_for_message("SensorToReference", timeout=5)
         
         if message_1 is not None and message_2 is not None:
             
             mat_mul_1 = np.matmul(referenceToBoard, message_1.matrix)
-        
             mat_1 = np.matmul(mat_mul_1, DrfToAxis7)
-            pos_1 = mat_1.T[3][:3]
-            ori_1 = mat_1.T[2][:3] 
             
             mat_mul_2 = np.matmul(referenceToBoard, message_2.matrix)
-        
             mat_2 = np.matmul(mat_mul_2, DrfToAxis7)
-            pos_2 = mat_2.T[3][:3]
-            ori_2 = mat_2.T[2][:3] 
             
-            pos = .5*(pos_1+pos_2)
-            ori = .5*(ori_1+ori_2)
+            pos = .5*(mat_1.T[3][:3]+mat_2.T[3][:3])
+            ori = .5*(mat_1.T[2][:3]+mat_2.T[2][:3])
+            
+            fig['data'][3]['x'] = [pos[0]]
+            fig['data'][3]['y'] = [pos[1]]
+            fig['data'][3]['z'] = [pos[2]]
+            fig['data'][3]['u'] = [ori[0]]
+            fig['data'][3]['v'] = [ori[1]]
+            fig['data'][3]['w'] = [ori[2]]
+            
+            fig['data'][4]['x'] = [pos[0]]
+            fig['data'][4]['y'] = [pos[1]]
+            fig['data'][4]['z'] = [pos[2]]
+            fig['data'][4]['u'] = [ori[0]]
+            fig['data'][4]['v'] = [ori[1]]
+            fig['data'][4]['w'] = [ori[2]]
+            
+            fig['data'][5]['x'] = [pos[0]]
+            fig['data'][5]['y'] = [pos[1]]
+            fig['data'][5]['z'] = [pos[2]]
+            fig['data'][5]['u'] = [ori[0]]
+            fig['data'][5]['v'] = [ori[1]]
+            fig['data'][5]['w'] = [ori[2]]
             
             if pos[0] >= cube.origin_corner[0] and pos[0] <= cube.origin_corner[0]+cube.side_length:
                 if pos[1] >= cube.origin_corner[1] and pos[1] <= cube.origin_corner[1]+cube.side_length:
                     if pos[2] >= cube.origin_corner[2] and pos[2] <= cube.origin_corner[2]+cube.side_length:
-                        fig['data'][3]['x'] = [pos[0]]
-                        fig['data'][3]['y'] = [pos[1]]
-                        fig['data'][3]['z'] = [pos[2]]
-                        fig['data'][3]['u'] = [ori[0]]
-                        fig['data'][3]['v'] = [ori[1]]
-                        fig['data'][3]['w'] = [ori[2]]
-                        
-                        fig['data'][4]['x'] = [pos[0]]
-                        fig['data'][4]['y'] = [pos[1]]
-                        fig['data'][4]['z'] = [pos[2]]
-                        fig['data'][4]['u'] = [ori[0]]
-                        fig['data'][4]['v'] = [ori[1]]
-                        fig['data'][4]['w'] = [ori[2]]
-                        
-                        fig['data'][5]['x'] = [pos[0]]
-                        fig['data'][5]['y'] = [pos[1]]
-                        fig['data'][5]['z'] = [pos[2]]
-                        fig['data'][5]['u'] = [ori[0]]
-                        fig['data'][5]['v'] = [ori[1]]
-                        fig['data'][5]['w'] = [ori[2]]
                         q.put(np.concatenate((pos, ori, tmp), axis=0))
     
         return fig
