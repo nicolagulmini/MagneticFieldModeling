@@ -44,7 +44,7 @@ task1 = NIDAQ(dev_name=deviceID)
 task1.SetClockOutput()
 task1.StartTask()
 
-AMOUNT_OF_NEW_POINTS = 5
+AMOUNT_OF_NEW_POINTS = 10
 print("Press the STOP button (or CTRL+C) when satisfied about the amount of gathered points. Suddenly the interpolation will be computed and the data will be stored in a .csv file.")
 
 global q, cube, coil_model, client
