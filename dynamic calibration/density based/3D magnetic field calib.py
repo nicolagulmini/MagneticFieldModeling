@@ -49,7 +49,7 @@ print("Press the STOP button (or CTRL+C) when satisfied about the amount of gath
 
 global q, cube, coil_model, client
 q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
-cube = CubeModel.cube_to_calib(np.array([-50., -50., 100.]), side_length=100., point_density=40., minimum_number_of_points=1)
+cube = CubeModel.cube_to_calib(np.array([-100., -100., 100.]), side_length=200., point_density=40., minimum_number_of_points=1)
 coil_model = Coil.CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
                                       'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]}) # mm
 
@@ -156,18 +156,21 @@ def update_graph_live(n_intervals):
         # print(message_1['Timestamp'])
         tmp = get_flux(get_fft(idx_signal), PhaseOffset)
         # print(idx_signal)
-        message_2 = client.wait_for_message("SensorToReference", timeout=5)
+        # message_2 = client.wait_for_message("SensorToReference", timeout=5)
         
-        if message_1 is not None and message_2 is not None:
+        if message_1 is not None: # and message_2 is not None:
             
             mat_mul_1 = np.matmul(referenceToBoard, message_1.matrix)
             mat_1 = np.matmul(mat_mul_1, DrfToAxis7)
             
-            mat_mul_2 = np.matmul(referenceToBoard, message_2.matrix)
-            mat_2 = np.matmul(mat_mul_2, DrfToAxis7)
+            # mat_mul_2 = np.matmul(referenceToBoard, message_2.matrix)
+            # mat_2 = np.matmul(mat_mul_2, DrfToAxis7)
             
-            pos = .5*(mat_1.T[3][:3]+mat_2.T[3][:3])
-            ori = .5*(mat_1.T[2][:3]+mat_2.T[2][:3])
+            # pos = .5*(mat_1.T[3][:3]+mat_2.T[3][:3])
+            # ori = .5*(mat_1.T[2][:3]+mat_2.T[2][:3])
+            
+            pos = mat_1.T[3][:3]
+            ori = mat_1.T[2][:3]
             
             fig['data'][3]['x'] = [pos[0]]
             fig['data'][3]['y'] = [pos[1]]
