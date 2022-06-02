@@ -23,9 +23,12 @@ def nice_plot(x, y, x_name=None, y_name=None, name='', marker='o', grid=False, l
     if y_name is not None: plt.ylabel(y_name)
     if legend_pos is not None: plt.legend(loc=legend_pos)
     
-def get_metrics(pred, unc, x_val, y_val, n_diag_points, den_to_normalize_val):
-    pred_val, pred_x, pred_y, pred_z = pred[:x_val.shape[0]], pred[x_val.shape[0]:x_val.shape[0]+n_diag_points], pred[x_val.shape[0]+n_diag_points:x_val.shape[0]+int(2*n_diag_points)], pred[x_val.shape[0]+int(2*n_diag_points):]
-    unc_val, unc_x, unc_y, unc_z = unc[:x_val.shape[0]], unc[x_val.shape[0]:x_val.shape[0]+n_diag_points], unc[x_val.shape[0]+n_diag_points:x_val.shape[0]+int(2*n_diag_points)], unc[x_val.shape[0]+int(2*n_diag_points):]
+def get_metrics(pred, unc, x_train, y_train, x_val, y_val, n_diag_points, den_to_normalize_val, den_to_normalize_train):
+    pred_train, pred_val, pred_x, pred_y, pred_z = pred[:x_train.shape[0]], pred[x_train.shape[0]:x_train.shape[0]+x_val.shape[0]], pred[x_train.shape[0]+x_val.shape[0]:x_train.shape[0]+x_val.shape[0]+n_diag_points], pred[x_train.shape[0]+x_val.shape[0]+n_diag_points:x_train.shape[0]+x_val.shape[0]+int(2*n_diag_points)], pred[x_train.shape[0]+x_val.shape[0]+int(2*n_diag_points):]
+    unc_train, unc_val, unc_x, unc_y, unc_z = unc[:x_train.shape[0]], unc[x_train.shape[0]:x_train.shape[0]+x_val.shape[0]], unc[x_train.shape[0]+x_val.shape[0]:x_train.shape[0]+x_val.shape[0]+n_diag_points], unc[x_train.shape[0]+x_val.shape[0]+n_diag_points:x_train.shape[0]+x_val.shape[0]+int(2*n_diag_points)], unc[x_train.shape[0]+x_val.shape[0]+int(2*n_diag_points):]
+    
+    mae_per_point_train = [MAE(pred_train[i], y_train[i])/den_to_normalize_train for i in range(y_train.shape[0])]
+    mae_train = sum(mae_per_point_train)/len(mae_per_point_train) * 100
     
     mae_per_point = [MAE(pred_val[i], y_val[i])/den_to_normalize_val for i in range(y_val.shape[0])]
     mae = sum(mae_per_point)/len(mae_per_point) * 100
@@ -33,7 +36,7 @@ def get_metrics(pred, unc, x_val, y_val, n_diag_points, den_to_normalize_val):
     rmse_per_point = [MSE(pred_val[i], y_val[i], squared=False)/den_to_normalize_val for i in range(y_val.shape[0])]
     rmse = sum(rmse_per_point)/len(rmse_per_point) * 100
     
-    return pred_val, pred_x, pred_y, pred_z, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point
+    return pred_train, pred_val, pred_x, pred_y, pred_z, unc_train, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point, mae_train, mae_per_point_train
     
 
 def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]):
@@ -77,6 +80,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     np.random.shuffle(dataset)
     training = dataset[:int(.8*dataset.shape[0])]
     x_train, y_train = training[:, :6], training[:, 6:]
+    den_to_normalize_train = np.mean(abs(y_train))
     
     validation = dataset[int(.8*dataset.shape[0]):]#int(.9*dataset.shape[0])]
     x_val, y_val = validation[:, :6], validation[:, 6:]
@@ -87,12 +91,12 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     # den_to_normalize_test = np.mean(abs(y_test))
     
     # to get also the diagonal predictions
-    to_predict = np.concatenate((x_val, diag_for_x, diag_for_y, diag_for_z), axis=0)
+    to_predict = np.concatenate((x_train, x_val, diag_for_x, diag_for_y, diag_for_z), axis=0)
     
     dictionary_with_performances = {}
     
     # to model the noise
-    alphas = [1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1., 10., 100.]
+    alphas = [1e-10, 1e-9, 1e-8, 1e-7, 5e-7, 1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 1e-2, 1e-1, 1., 10., 100.]
     for alpha in alphas:
         
         # gaussian process regression
@@ -123,7 +127,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
         crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=to_predict) 
         pred = crbf.predict()
         unc = crbf.uncertainty()
-        pred_val, pred_x, pred_y, pred_z, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point = get_metrics(pred, unc, x_val, y_val, n_diag_points, den_to_normalize_val)
+        pred_train, pred_val, pred_x, pred_y, pred_z, unc_train, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point, mae_train, mae_per_point_train = get_metrics(pred, unc, x_train, y_train, x_val, y_val, n_diag_points, den_to_normalize_val, den_to_normalize_train)
         dictionary_with_performances["custom radial basis function interpolator " + str(alpha)] = {"alpha": alpha, 
                                                             "nmae": mae,
                                                             "nrmse": rmse,
@@ -135,7 +139,8 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
                                                             "diag z preds": pred_z,
                                                             "unc diag x": unc_x,
                                                             "unc diag y": unc_y,
-                                                            "unc diag z": unc_z
+                                                            "unc diag z": unc_z,
+                                                            "train nmae": mae_train
                                                             }
     
         # neural network 
@@ -170,19 +175,33 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     # crbfi error vs alpha
     
     plt.figure()
-    plt.title(r'error vs $\alpha$ Radial Basis Function Interpolation')
+    plt.title(r'error on test set vs $\alpha$ Radial Basis Function Interpolation')
     y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae'] for alpha in alphas]
     nice_plot(alphas, y, r'$\alpha$', 'error', 'nMAE', marker='^', grid=True)
     
     y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nrmse'] for alpha in alphas]
     nice_plot(alphas, y, None, None, 'nRMSE', marker='o', legend_pos='lower right')
-    plt.xscale('log')
+    #plt.xscale('log')
     plt.savefig('crbfi alpha error')
     
-    alpha_star = alphas[0] # pick the best alpha
+    # crbfi vs alpha (logarithmic scale)
+    plt.figure()
+    plt.title(r'error on test set vs $\alpha$ Radial Basis Function Interpolation')
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae'] for alpha in alphas]
+    nice_plot(alphas, y, r'$\alpha$', 'error', 'nMAE', marker='^', grid=True)
+    
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nrmse'] for alpha in alphas]
+    nice_plot(alphas, y, None, None, 'nRMSE', marker='o')
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['train nmae'] for alpha in alphas]
+    nice_plot(alphas, y, None, None, 'nMAE on train set', marker='o', legend_pos='upper right')
+    plt.xscale('log')
+    plt.savefig('crbfi alpha error not log')
+    
+    alpha_star = alphas[0] # pick the best alpha on training set 
     for alpha in alphas:
-        if dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae'] < dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['nmae']:
+        if dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['train nmae'] < dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['train nmae']:
             alpha_star = alpha
+    print(alpha_star)
     
     # correlation error and uncertainty crbfi
     
