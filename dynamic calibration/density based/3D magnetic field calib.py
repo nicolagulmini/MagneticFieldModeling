@@ -86,7 +86,7 @@ app.layout = html.Div(html.Div(children=[html.H1('Magnetic Field Freehand Calibr
                                         ),
                                          html.Div(id='live-update-text'),
                                          dcc.Interval(id='interval-component',
-                                                      interval = 25, # ms
+                                                      interval = 100, # ms
                                                       n_intervals = 0),
                                          daq.StopButton(id='stop-button',
                                                         #label='',
