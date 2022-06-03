@@ -39,7 +39,7 @@ def get_metrics(pred, unc, x_train, y_train, x_val, y_val, n_diag_points, den_to
     return pred_train, pred_val, pred_x, pred_y, pred_z, unc_train, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point, mae_train, mae_per_point_train
     
 
-def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]):
+def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]):
     # put the origin of the cube, the side length and the number of points along the diagonal manually
     
     if not os.path.exists("./" + filename + ".csv"):
@@ -121,8 +121,8 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
                                                             "unc diag z": unc_z
                                                             }
         '''
-        # radial basis function interpolation 
         
+        # radial basis function interpolation 
         
         crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=to_predict) 
         pred = crbf.predict()
@@ -180,8 +180,9 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     nice_plot(alphas, y, r'$\alpha$', 'error', 'nMAE', marker='^', grid=True)
     
     y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nrmse'] for alpha in alphas]
-    nice_plot(alphas, y, None, None, 'nRMSE', marker='o', legend_pos='lower right')
-    #plt.xscale('log')
+    nice_plot(alphas, y, None, None, 'nRMSE', marker='o')
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['train nmae'] for alpha in alphas]
+    nice_plot(alphas, y, None, None, 'nMAE on train set', marker='.', legend_pos='upper right')
     plt.savefig('crbfi alpha error')
     
     # crbfi vs alpha (logarithmic scale)
@@ -193,15 +194,15 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nrmse'] for alpha in alphas]
     nice_plot(alphas, y, None, None, 'nRMSE', marker='o')
     y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['train nmae'] for alpha in alphas]
-    nice_plot(alphas, y, None, None, 'nMAE on train set', marker='o', legend_pos='upper right')
+    nice_plot(alphas, y, None, None, 'nMAE on train set', marker='.', legend_pos='upper right')
     plt.xscale('log')
-    plt.savefig('crbfi alpha error not log')
+    plt.savefig('crbfi alpha error log')
     
     alpha_star = alphas[0] # pick the best alpha on training set 
     for alpha in alphas:
         if dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['train nmae'] < dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['train nmae']:
             alpha_star = alpha
-    print(alpha_star)
+    alpha_star = 1e-7
     
     # correlation error and uncertainty crbfi
     
@@ -248,7 +249,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     
     # only for simulated magnetic data
     
-    '''
+    
     
     
     plt.figure()
@@ -271,12 +272,12 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.figure()
     plt.title("Magnetic field prediction and comparison of RBFI - z component, first coil\n(only for simulated magnetic data)")
     y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['diag z preds']
-    nice_plot(range(n_diag_points), y[:,0], 'diag point', 'magnetic field (z component)', 'predicted', grid=True)
+    #nice_plot(range(n_diag_points), y[:,0], 'diag point', 'magnetic field (z component)', 'predicted', grid=True)
     nice_plot(range(n_diag_points), simulated_z[:,0], name='simulated', marker='^', legend_pos='upper right')
     # maybe uncertainty as confidence intervals?
     plt.savefig('rbfi pred 1st coil z comp')
     
-    '''
+    
     
     
     # gaussian 

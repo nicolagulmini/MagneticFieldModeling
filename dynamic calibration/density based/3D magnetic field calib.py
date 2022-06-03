@@ -26,7 +26,7 @@ DrfToAxis7 = np.array([
     ])
 
 channeldict = {0: 4, 1: 0, 2: 8, 3: 1, 4: 9, 5: 2, 6: 10, 7: 11, 8: 3, 9: 8, 10: 12, 11: 13, 12: 5, 13: 14, 14: 6, 15: 15, 16: 7}
-sampleFreq = 40000
+sampleFreq = 160000
 noSamples = 4000
 freqs = np.array([6000, 6200, 6400, 6600, 6800, 7000, 7200, 7400])
 idx_signal = freqs/sampleFreq*noSamples+1
@@ -49,7 +49,7 @@ print("Press the STOP button (or CTRL+C) when satisfied about the amount of gath
 
 global q, cube, coil_model, client
 q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
-cube = CubeModel.cube_to_calib(np.array([-100., -100., 100.]), side_length=200., point_density=40., minimum_number_of_points=1)
+cube = CubeModel.cube_to_calib(np.array([-25., -25., 100.]), side_length=50., point_density=10., minimum_number_of_points=5)
 coil_model = Coil.CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
                                       'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]}) # mm
 
