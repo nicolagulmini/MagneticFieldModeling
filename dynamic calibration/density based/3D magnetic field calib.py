@@ -49,7 +49,7 @@ print("Press the STOP button (or CTRL+C) when satisfied about the amount of gath
 
 global q, cube, coil_model, client
 q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
-cube = CubeModel.cube_to_calib(np.array([-25., -25., 100.]), side_length=50., point_density=10., minimum_number_of_points=5)
+cube = CubeModel.cube_to_calib(np.array([-50., -50., 100.]), side_length=100., point_density=20., minimum_number_of_points=1)
 coil_model = Coil.CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
                                       'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]}) # mm
 
