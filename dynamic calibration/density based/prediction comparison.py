@@ -8,7 +8,9 @@ import CoilModel as Coil
 # import tensorflow as tf
 # from tensorflow import keras
 
-filename = "sampled_points"
+folder = "1"
+filename = "sampled_points.csv"
+path = "C:/Users/nicol/Desktop/data/" + folder + "/"
 
 def get_theoretical_field(model, point, ori=None):
     tmp = np.concatenate(model.coil_field_total(point[0], point[1], point[2]), axis=1).T
@@ -34,7 +36,7 @@ def get_metrics(pred, unc, x_train, y_train, x_val, y_val, n_diag_points, den_to
 def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]):
     # put the origin of the cube, the side length and the number of points along the diagonal manually
     
-    if not os.path.exists("./" + filename + ".csv"):
+    if not os.path.exists(path + filename):
         print('There are no data.')
         return
     
@@ -55,7 +57,7 @@ def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50,
     simulated_y = np.array([get_theoretical_field(coil_model, diag_for_y[i][:3], diag_for_y[i][3:]).A1 for i in range(n_diag_points)])
     simulated_z = np.array([get_theoretical_field(coil_model, diag_for_z[i][:3], diag_for_z[i][3:]).A1 for i in range(n_diag_points)])
         
-    dataset = np.loadtxt("./" + filename + ".csv") # shape should be (n, 14)
+    dataset = np.loadtxt(path + filename) # shape should be (n, 14)
     # n is the number of points
     # each point is 14-dimensional: 3 positions, 3 orientations, 8 coils 
     
