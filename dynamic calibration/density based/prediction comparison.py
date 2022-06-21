@@ -99,29 +99,6 @@ def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50,
     alphas = [1e-10, 1e-9, 1e-8, 1e-7, 5e-7, 1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 1e-2, 1e-1, 1., 10., 100.]
     for alpha in alphas:
         
-        # gaussian process regression
-        '''
-        gp = gpr.gaussian_process_regressor(alpha=alpha, points=x_train, measures=y_train)
-        gp.fit()
-        pred, unc = gp.predict(to_predict)
-        pred_val, pred_x, pred_y, pred_z, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point = get_metrics(pred, unc, x_val, y_val, n_diag_points, den_to_normalize_val)
-        r2 = gp.score(x_val, y_val)
-        dictionary_with_performances["gaussian process " + str(alpha)] = {"alpha": alpha, 
-                                                            "nmae": mae,
-                                                            "nrmse": rmse,
-                                                            "r2": r2,
-                                                            "uncertainty": unc,
-                                                            "nmae per point": mae_per_point,
-                                                            "nrmse per point": rmse_per_point,
-                                                            "diag x preds": pred_x,
-                                                            "diag y preds": pred_y,
-                                                            "diag z preds": pred_z,
-                                                            "unc diag x": unc_x,
-                                                            "unc diag y": unc_y,
-                                                            "unc diag z": unc_z
-                                                            }
-        '''
-        
         # radial basis function interpolation 
         
         crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=to_predict) 
@@ -143,35 +120,12 @@ def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50,
                                                             "train nmae": mae_train
                                                             }
     
-        # neural network 
-        # None for now
-        
-        # test also on a diagonal (need to know the dimension of the cube)
+    # neural network 
+    # None for now
+    
+    # test also on a diagonal (need to know the dimension of the cube)
 
-    '''
-    # gaussian process error vs alpha
-    
-    plt.figure()
-    plt.title(r'error vs $\alpha$ Gaussian Process Regression')
-    y = [dictionary_with_performances["gaussian process " + str(alpha)]['nmae'] for alpha in alphas]
-    nice_plot(alphas, y, r'$\alpha$', 'error', 'nMAE', marker='^', grid=True)
-    
-    y = [dictionary_with_performances["gaussian process " + str(alpha)]['nrmse'] for alpha in alphas]
-    nice_plot(alphas, y, None, None, 'nRMSE', marker='o', legend_pos='lower right')
-    plt.xscale('log')
-    plt.savefig('gpr alpha error')
-    
-    # gassian process r2 vs alpha
-    
-    plt.figure()
-    plt.title(r'$R^2$ vs $\alpha$ Gaussian Process Regression')
-    y = [dictionary_with_performances["gaussian process " + str(alpha)]['r2'] for alpha in alphas]
-    nice_plot(alphas, y, r'$\alpha$', 'error', 'nMAE', marker='^', grid=True, legend_pos='lower right')
-    plt.xscale('log')
-    plt.savefig('gpr alpha r2')
-    
-    '''
-    
+ 
     # crbfi error vs alpha
     
     plt.figure()
@@ -249,9 +203,6 @@ def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50,
     
     # only for simulated magnetic data
     
-    
-    
-    
     plt.figure()
     plt.title("Magnetic field prediction and comparison of RBFI - x component, first coil\n(only for simulated magnetic data)")
     y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['diag x preds']
@@ -276,21 +227,5 @@ def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50,
     nice_plot(range(n_diag_points), simulated_z[:,0], name='simulated', marker='^', legend_pos='upper right')
     # maybe uncertainty as confidence intervals?
     plt.savefig('rbfi pred 1st coil z comp')
-    
-    
-    
-    
-    # gaussian 
-    '''
-    plt.figure()
-    plt.title("Magnetic field prediction and comparison of Gaussian Process - x component, first coil\n(only for simulated magnetic data)")
-    y = dictionary_with_performances["gaussian process " + str(alpha_star)]['diag x preds']
-    nice_plot(range(n_diag_points), y[:,0], 'diag point', 'magnetic field (x component)', 'predicted', grid=True)
-    nice_plot(range(n_diag_points), simulated_x[:,0], name='simulated', marker='^', legend_pos='upper right')
-    plt.savefig('gp pred 1st coil x comp')
-    '''
-    # gaussian process does not work well
 
 main()
-
-# time (?)
