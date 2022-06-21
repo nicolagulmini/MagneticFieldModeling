@@ -5,8 +5,9 @@ import gpr
 from sklearn.metrics import mean_absolute_error as MAE, mean_squared_error as MSE
 import matplotlib.pyplot as plt
 import CoilModel as Coil
-# import tensorflow as tf
-# from tensorflow import keras
+
+import tensorflow as tf
+from tensorflow import keras
 
 folder = "1"
 filename = "sampled_points.csv"
@@ -76,13 +77,15 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     x_train, y_train = training[:, :6], training[:, 6:]
     den_to_normalize_train = np.mean(abs(y_train))
     
-    validation = dataset[int(.8*dataset.shape[0]):]#int(.9*dataset.shape[0])]
+    # this is actually a test set
+    validation = dataset[int(.8*dataset.shape[0]):int(.9*dataset.shape[0])]
     x_val, y_val = validation[:, :6], validation[:, 6:]
     den_to_normalize_val = np.mean(abs(y_val)) 
     
-    # test = dataset[int(.9*dataset.shape[0]):]
-    # x_test, y_test = test[:, :6], test[:, 6:]
-    # den_to_normalize_test = np.mean(abs(y_test), 0)
+    # this is a validation set for the neural network
+    val_per_nn = dataset[int(.9*dataset.shape[0]):]
+    x_val_nn, y_val_nn = val_per_nn[:, :6], val_per_nn[:, 6:]
+    den_to_normalize_val_nn = np.mean(abs(y_val_nn))
     
     # to get also the diagonal predictions
     to_predict = np.concatenate((x_train, x_val, diag_for_x, diag_for_y, diag_for_z), axis=0)
@@ -115,7 +118,50 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
                                                             }
     
     # neural network 
-    # None for now
+    input = tf.keras.layers.Input((6))
+    x = tf.keras.layers.Dense(100, activation='sigmoid')(input)
+    x = tf.keras.layers.Dense(100, activation='sigmoid')(x)
+    output = tf.keras.layers.Dense(8, activation='linear')(x)
+
+    model = tf.keras.models.Model(inputs=input, outputs=output)
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), 
+                  loss=tf.keras.losses.MeanAbsoluteError(), 
+                  metrics=[tf.keras.losses.MeanAbsoluteError(), tf.keras.losses.MeanSquaredError()])
+    #model.summary()
+    history = model.fit(x_train, 
+                        y_train, 
+                        validation_data=(x_val_nn, y_val_nn),
+                        epochs=100, 
+                        batch_size=32, 
+                        shuffle=True, 
+                        verbose=0,
+                        callbacks=[tf.keras.callbacks.EarlyStopping(patience=10)]
+                        )
+    
+    # loss, nn_mae, nn_rmse = model.evaluate(x_val, y_val)
+    # print(nn_mae/den_to_normalize_val)
+    
+    # nn history
+    
+    plt.figure()
+    plt.title("Neural Network training history")
+    y = history.history['mean_absolute_error']
+    plt.plot(range(len(y)), y, ls='--', label='training MAE')
+    
+    y = history.history['val_mean_absolute_error']
+    plt.plot(range(len(y)), y, ls='--', label='validation MAE')
+        
+    y = history.history['mean_squared_error']
+    plt.plot(range(len(y)), y, ls='--', label='training MSE')
+    
+    y = history.history['val_mean_squared_error']
+    plt.plot(range(len(y)), y, ls='--', label='validation MSE')
+    
+    plt.xlabel('epochs')
+    plt.ylabel('training error')
+    plt.legend(loc='upper right')
+    plt.grid(color='grey', linewidth=.5, alpha=.5)
+    plt.savefig(path + "nn training performance")   
     
     # crbfi error vs alpha
         
@@ -253,5 +299,9 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     # maybe uncertainty as confidence intervals?
     plt.savefig(path + "rbfi pred 1st coil z comp")
     '''
+    
+    # nn on a diagonal
+    
+    
 
 main()
