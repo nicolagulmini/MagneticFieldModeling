@@ -132,12 +132,12 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     
     # neural network 
     input = tf.keras.layers.Input((6))
-    x = tf.keras.layers.Dense(100, activation='tanh')(input)
-    x = tf.keras.layers.Dense(100, activation='sigmoid')(x)
-    output = tf.keras.layers.Dense(8, activation='linear')(x)
+    x = tf.keras.layers.Dense(100, activation='tanh', use_bias=False, activity_regularizer=tf.keras.regularizers.L1(1e-5))(input)
+    x = tf.keras.layers.Dense(100, activation='sigmoid', use_bias=False, activity_regularizer=tf.keras.regularizers.L1(1e-5))(x)
+    output = tf.keras.layers.Dense(8, activation='linear', use_bias=False)(x)
 
     model = tf.keras.models.Model(inputs=input, outputs=output)
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), 
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01), 
                   loss=tf.keras.losses.MeanAbsoluteError(), 
                   metrics=[tf.keras.losses.MeanAbsoluteError(), tf.keras.losses.MeanSquaredError()])
     #model.summary()
