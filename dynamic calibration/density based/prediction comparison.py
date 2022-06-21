@@ -14,14 +14,6 @@ def get_theoretical_field(model, point, ori=None):
     tmp = np.concatenate(model.coil_field_total(point[0], point[1], point[2]), axis=1).T
     if ori is None: return tmp # (3, 8)
     return np.dot(ori, tmp) 
-
-def nice_plot(x, y, x_name=None, y_name=None, name='', marker='o', grid=False, legend_pos=None):
-    plt.scatter(x, y, marker=marker, label=name)
-    plt.plot(x, y, ls='--')
-    if grid: plt.grid(color='grey', linewidth=.5, alpha=.5)
-    if x_name is not None: plt.xlabel(x_name)
-    if y_name is not None: plt.ylabel(y_name)
-    if legend_pos is not None: plt.legend(loc=legend_pos)
     
 def get_metrics(pred, unc, x_train, y_train, x_val, y_val, n_diag_points, den_to_normalize_val, den_to_normalize_train):
     pred_train, pred_val, pred_x, pred_y, pred_z = pred[:x_train.shape[0]], pred[x_train.shape[0]:x_train.shape[0]+x_val.shape[0]], pred[x_train.shape[0]+x_val.shape[0]:x_train.shape[0]+x_val.shape[0]+n_diag_points], pred[x_train.shape[0]+x_val.shape[0]+n_diag_points:x_train.shape[0]+x_val.shape[0]+int(2*n_diag_points)], pred[x_train.shape[0]+x_val.shape[0]+int(2*n_diag_points):]
@@ -127,6 +119,14 @@ def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50,
 
  
     # crbfi error vs alpha
+    
+    def nice_plot(x, y, x_name=None, y_name=None, name='', marker='o', grid=False, legend_pos=None):
+        plt.scatter(x, y, marker=marker, label=name)
+        plt.plot(x, y, ls='--')
+        if grid: plt.grid(color='grey', linewidth=.5, alpha=.5)
+        if x_name is not None: plt.xlabel(x_name)
+        if y_name is not None: plt.ylabel(y_name)
+        if legend_pos is not None: plt.legend(loc=legend_pos)
     
     plt.figure()
     plt.title(r'error on test set vs $\alpha$ Radial Basis Function Interpolation')
