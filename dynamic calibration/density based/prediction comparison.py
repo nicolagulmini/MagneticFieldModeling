@@ -34,13 +34,13 @@ def get_metrics(pred, unc, x_train, y_train, x_val, y_val, n_diag_points, den_to
     return pred_train, pred_val, pred_x, pred_y, pred_z, unc_train, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point, mae_train, mae_per_point_train
     
 
-def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]):
+def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000], smaller_cube=False):
     # put the origin of the cube, the side length and the number of points along the diagonal manually
     
     if not os.path.exists(path + filename):
         print('There are no data.')
         return
-    
+        
     # the coil model is necessary to get the comparison for the simulated magnetic data
     # it makes sense almost only if we sample with a simulated magnetic field. Otherwise just ignore the related section.
     coil_model = Coil.CoilModel(module_config={'centers_x': centers_x, 'centers_y': centers_y})
@@ -61,6 +61,19 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     dataset = np.loadtxt(path + filename) # shape should be (n, 14)
     # n is the number of points
     # each point is 14-dimensional: 3 positions, 3 orientations, 8 coils 
+    
+    if smaller_cube:
+        effective_dimensions = origin/np.sqrt(2.) # it is the smaller cube of length L/sqrt(2), where L is the bigger cubes length
+        effective_dataset = []
+        for point in dataset:
+            if point[0] > origin[0]+effective_dimensions[0]/2 and point[0] < origin[0]+side_length-effective_dimensions[0]/2:
+                if point[1] > origin[1]+effective_dimensions[1]/2 and point[1] < origin[1]+side_length-effective_dimensions[1]/2:
+                    if point[2] > origin[2]+effective_dimensions[2]/2 and point[2] < origin[2]+side_length-effective_dimensions[2]/2:
+                        effective_dataset.append(point)
+        effective_dataset = np.array(effective_dataset)
+        print("%i discarded points" % (dataset.shape[0]-effective_dataset.shape[0]))
+        print("now the dataset contains %i points" % effective_dataset.shape[0])
+        dataset = effective_dataset
     
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection='3d')
@@ -119,7 +132,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     
     # neural network 
     input = tf.keras.layers.Input((6))
-    x = tf.keras.layers.Dense(100, activation='sigmoid')(input)
+    x = tf.keras.layers.Dense(100, activation='tanh')(input)
     x = tf.keras.layers.Dense(100, activation='sigmoid')(x)
     output = tf.keras.layers.Dense(8, activation='linear')(x)
 
@@ -177,7 +190,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.plot(alphas, y, ls='--')
     
     y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['train nmae'] for alpha in alphas]
-    plt.scatter(alphas, y, marker='.', label='nRMSE')
+    plt.scatter(alphas, y, marker='.', label='train nRMSE')
     plt.plot(alphas, y, ls='--')
     
     plt.grid(color='grey', linewidth=.5, alpha=.5)
@@ -300,8 +313,24 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.savefig(path + "rbfi pred 1st coil z comp")
     '''
     
-    # nn on a diagonal
+    # nn on a diagonal    
+    
+    plt.figure()
+    plt.title("Magnetic field prediction and comparison of NN - x component, first coil\n(only for simulated magnetic data)")
+    
+    y = model.predict(diag_for_x)    
+    plt.scatter(range(n_diag_points), y[:,0], marker='o', label='predicted')
+    plt.plot(range(n_diag_points), y[:,0], ls='--')
+    
+    plt.scatter(range(n_diag_points), simulated_x[:,0], marker='^', label='simulated')
+    plt.plot(range(n_diag_points), simulated_x[:,0], ls='--')
+    
+    # maybe uncertainty as confidence intervals?
+    plt.xlabel('diag point')
+    plt.ylabel('magnetic field')
+    plt.legend(loc='upper right')
+    plt.grid(color='grey', linewidth=.5, alpha=.5)
+    plt.savefig(path + "rbfi pred 1st coil x comp")
     
     
-
-main()
+main(smaller_cube=True)
