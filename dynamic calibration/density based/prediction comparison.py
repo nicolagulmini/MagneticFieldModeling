@@ -132,7 +132,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     
     # neural network 
     input = tf.keras.layers.Input((6))
-    x = tf.keras.layers.Dense(100, activation='tanh', use_bias=False, activity_regularizer=tf.keras.regularizers.L1(1e-5))(input)
+    x = tf.keras.layers.Dense(100, activation='sigmoid', use_bias=False, activity_regularizer=tf.keras.regularizers.L1(1e-5))(input)
     x = tf.keras.layers.Dense(100, activation='sigmoid', use_bias=False, activity_regularizer=tf.keras.regularizers.L1(1e-5))(x)
     output = tf.keras.layers.Dense(8, activation='linear', use_bias=False)(x)
 
@@ -141,6 +141,9 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
                   loss=tf.keras.losses.MeanAbsoluteError(), 
                   metrics=[tf.keras.losses.MeanAbsoluteError(), tf.keras.losses.MeanSquaredError()])
     #model.summary()
+    # normalized_y_train = (y_train-np.min(y_train)) / (np.max(y_train)-np.min(y_train))
+    # normalized_y_val_nn = (y_val_nn-np.min(y_val_nn)) / (np.max(y_val_nn)-np.min(y_val_nn))
+
     history = model.fit(x_train, 
                         y_train, 
                         validation_data=(x_val_nn, y_val_nn),
