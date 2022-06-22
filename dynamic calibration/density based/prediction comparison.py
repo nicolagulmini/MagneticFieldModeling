@@ -9,9 +9,17 @@ import CoilModel as Coil
 import tensorflow as tf
 from tensorflow import keras
 
-folder = "1"
+folder = "8 real"
 filename = "sampled_points.csv"
 path = "C:/Users/nicol/Desktop/data/" + folder + "/"
+
+matrix_for_real_data = np.array([[0.999910386486641, 0.0132637271291318, 0.00177556758556555, 4.60082741045687],
+[-0.0132730439610558, 0.999897566016150, 0.00534218300150869	, 0.386762332074675],
+[-0.00170455528053870, -0.00536526920313416, 0.999984151502086, 28.3150462403445],
+[0,	 0, 0, 1]])
+
+rotation_matrix = matrix_for_real_data[:3, :3]
+translation_vector = matrix_for_real_data.T[3][:3]
 
 def get_theoretical_field(model, point, ori=None):
     tmp = np.concatenate(model.coil_field_total(point[0], point[1], point[2]), axis=1).T
@@ -34,7 +42,7 @@ def get_metrics(pred, unc, x_train, y_train, x_val, y_val, n_diag_points, den_to
     return pred_train, pred_val, pred_x, pred_y, pred_z, unc_train, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point, mae_train, mae_per_point_train
     
 
-def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000], smaller_cube=False):
+def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000], smaller_cube=False, real=False):
     # put the origin of the cube, the side length and the number of points along the diagonal manually
     
     if not os.path.exists(path + filename):
@@ -61,7 +69,16 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     dataset = np.loadtxt(path + filename) # shape should be (n, 14)
     # n is the number of points
     # each point is 14-dimensional: 3 positions, 3 orientations, 8 coils 
-    
+
+    if real:
+        for i in range(dataset.shape[0]):
+            position = dataset[i][:3]
+            orientation = dataset[i][3:6]
+            new_orientation = np.matmul(rotation_matrix, orientation)
+            new_position = np.matmul(rotation_matrix, position) + translation_vector
+            dataset[i][:3] = new_position
+            dataset[i][3:6] = new_orientation
+        
     if smaller_cube:
         effective_dimensions = origin/np.sqrt(2.) # it is the smaller cube of length L/sqrt(2), where L is the bigger cubes length
         effective_dataset = []
@@ -129,7 +146,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
                                                             "unc diag z": unc_z,
                                                             "train nmae": mae_train
                                                             }
-    
+            
     # neural network 
     input = tf.keras.layers.Input((6))
     x = tf.keras.layers.Dense(100, activation='sigmoid', use_bias=False, activity_regularizer=tf.keras.regularizers.L1(1e-5))(input)
@@ -226,12 +243,26 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.xscale('log')
     plt.savefig(path + "crbfi log alpha error")
     
-    # pick the best alpha on training set, in terms of nMAE
+    # pick the best alpha, in terms of nMAE (need to define what does it mean 'best alpha')
     
     alpha_star = alphas[0] 
     for alpha in alphas:
         if dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['train nmae'] < dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['train nmae']:
             alpha_star = alpha
+        
+    # plot which points have an higher error
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    plt.title("test points")
+    colors = dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae per point']
+    # print(colors)
+    ax.scatter3D(x_val[:, 0], x_val[:, 1], x_val[:, 2], c=colors, marker='o', cmap='coolwarm')
+    ax.set_xlabel('x (mm)')
+    ax.set_ylabel('y (mm)')
+    ax.set_zlabel('z (mm)')
+    plt.show()
+    return
     
     # correlation error and uncertainty crbfi
     
@@ -336,4 +367,4 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.savefig(path + "rbfi pred 1st coil x comp")
     
     
-main(smaller_cube=False)
+main(smaller_cube=False, real=True)
