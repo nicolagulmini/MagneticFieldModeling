@@ -257,12 +257,11 @@ def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50,
     plt.title("test points")
     colors = dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae per point']
     # print(colors)
-    ax.scatter3D(x_val[:, 0], x_val[:, 1], x_val[:, 2], c=colors, marker='o', cmap='coolwarm')
+    ax.scatter3D(x_val[:, 0], x_val[:, 1], x_val[:, 2], c=colors, marker='o', cmap='coolwarm') # change the cmap
     ax.set_xlabel('x (mm)')
     ax.set_ylabel('y (mm)')
     ax.set_zlabel('z (mm)')
     plt.show()
-    return
     
     # correlation error and uncertainty crbfi
     
@@ -316,8 +315,13 @@ def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50,
     plt.title("Magnetic field prediction and comparison of RBFI - x component, first coil\n(only for simulated magnetic data)")
     
     y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['diag x preds']
-    plt.scatter(range(n_diag_points), y[:,0], marker='o', label='predicted')
-    plt.plot(range(n_diag_points), y[:,0], ls='--')
+    if real: 
+        # rescale the predictions (has to be done also for the other components but for now I plot only the x one)
+        # idk if ignoring the other components is wrong...
+        k_x = sum(simulated_x[:,0]*y[:,0]) / sum(y[:,0]**2) 
+    
+    plt.scatter(range(n_diag_points), k_x*y[:,0], marker='o', label='predicted')
+    plt.plot(range(n_diag_points), k_x*y[:,0], ls='--')
     
     plt.scatter(range(n_diag_points), simulated_x[:,0], marker='^', label='simulated')
     plt.plot(range(n_diag_points), simulated_x[:,0], ls='--')
