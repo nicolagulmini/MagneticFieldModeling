@@ -9,7 +9,7 @@ import CoilModel as Coil
 import tensorflow as tf
 from tensorflow import keras
 
-folder = "6 real"
+folder = "1 random"
 filename = "sampled_points.csv"
 path = "C:/Users/nicol/Desktop/data/" + folder + "/"
 
@@ -112,8 +112,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     ax.set_zlabel('z (mm)')
     #plt.savefig('comparison.png')
     plt.show()
-    return
-    
+
     np.random.shuffle(dataset)
     training = dataset[:int(.8*dataset.shape[0])]
     x_train, y_train = training[:, :6], training[:, 6:]
@@ -176,7 +175,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     history = model.fit(x_train, 
                         y_train, 
                         validation_data=(x_val_nn, y_val_nn),
-                        epochs=100, 
+                        epochs=4, 
                         batch_size=32, 
                         shuffle=True, 
                         verbose=0,
@@ -381,7 +380,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.ylabel('magnetic field')
     plt.legend(loc='upper right')
     plt.grid(color='grey', linewidth=.5, alpha=.5)
-    plt.savefig(path + "rbfi pred 1st coil x comp")
+    plt.savefig(path + "nn pred 1st coil x comp")
     
     
-main(smaller_cube=False, real=True)
+main(smaller_cube=False, real=False)
