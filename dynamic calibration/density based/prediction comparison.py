@@ -99,8 +99,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     ax.set_xlabel('x (mm)')
     ax.set_ylabel('y (mm)')
     ax.set_zlabel('z (mm)')
-    #plt.savefig('comparison.png')
-    plt.show()
+    plt.savefig('sampled points.png')
     
     # plot the spherical distribution of the orientations
     fig = plt.figure()
@@ -110,8 +109,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     ax.set_xlabel('x (mm)')
     ax.set_ylabel('y (mm)')
     ax.set_zlabel('z (mm)')
-    #plt.savefig('comparison.png')
-    plt.show()
+    plt.savefig('orientations distribution.png')
 
     np.random.shuffle(dataset)
     training = dataset[:int(.8*dataset.shape[0])]
@@ -160,12 +158,12 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
             
     # neural network 
     input = tf.keras.layers.Input((6))
-    x = tf.keras.layers.Dense(100, activation='sigmoid', use_bias=False, activity_regularizer=tf.keras.regularizers.L1(1e-5))(input)
-    x = tf.keras.layers.Dense(100, activation='sigmoid', use_bias=False, activity_regularizer=tf.keras.regularizers.L1(1e-5))(x)
-    output = tf.keras.layers.Dense(8, activation='linear', use_bias=False)(x)
+    x = tf.keras.layers.Dense(10, activation='sigmoid')(input)
+    x = tf.keras.layers.Dense(10, activation='sigmoid')(x)
+    output = tf.keras.layers.Dense(8, activation='linear')(x)
 
     model = tf.keras.models.Model(inputs=input, outputs=output)
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01), 
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001), 
                   loss=tf.keras.losses.MeanAbsoluteError(), 
                   metrics=[tf.keras.losses.MeanAbsoluteError(), tf.keras.losses.MeanSquaredError()])
     #model.summary()
@@ -175,9 +173,8 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     history = model.fit(x_train, 
                         y_train, 
                         validation_data=(x_val_nn, y_val_nn),
-                        epochs=4, 
+                        epochs=100, 
                         batch_size=32, 
-                        shuffle=True, 
                         verbose=0,
                         callbacks=[tf.keras.callbacks.EarlyStopping(patience=10)]
                         )
@@ -260,7 +257,6 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     for alpha in alphas:
         if dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['train nmae'] < dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['train nmae']:
             alpha_star = alpha
-    alpha_star = 1e-10
         
     # plot which points have an higher error
     
@@ -327,6 +323,8 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.title("Magnetic field prediction and comparison of RBFI - x component, first coil\n(only for simulated magnetic data)")
     
     y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['diag x preds']
+    k_x = 1.
+    
     if real: 
         # rescale the predictions (has to be done also for the other components but for now I plot only the x one)
         # idk if ignoring the other components is wrong...
@@ -344,7 +342,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.legend(loc='upper right')
     plt.grid(color='grey', linewidth=.5, alpha=.5)
     plt.savefig(path + "rbfi pred 1st coil x comp")
-    
+
     '''
     plt.figure()
     plt.title("Magnetic field prediction and comparison of RBFI - y component, first coil\n(only for simulated magnetic data)")

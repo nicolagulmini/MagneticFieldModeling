@@ -3,7 +3,7 @@ import numpy as np
 import CoilModel as Coil
 import cube_to_calib as CubeModel
 
-n = 10000
+n = 1000
 
 cube_origin = np.array([-50., -50., 50.]) 
 cube_side = 100.
