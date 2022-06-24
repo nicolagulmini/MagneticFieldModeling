@@ -9,7 +9,7 @@ import CoilModel as Coil
 import tensorflow as tf
 from tensorflow import keras
 
-folder = "8 real"
+folder = "6 real"
 filename = "sampled_points.csv"
 path = "C:/Users/nicol/Desktop/data/" + folder + "/"
 
@@ -42,7 +42,7 @@ def get_metrics(pred, unc, x_train, y_train, x_val, y_val, n_diag_points, den_to
     return pred_train, pred_val, pred_x, pred_y, pred_z, unc_train, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point, mae_train, mae_per_point_train
     
 
-def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000], smaller_cube=False, real=False):
+def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000], smaller_cube=False, real=False):
     # put the origin of the cube, the side length and the number of points along the diagonal manually
     
     if not os.path.exists(path + filename):
@@ -101,6 +101,18 @@ def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50,
     ax.set_zlabel('z (mm)')
     #plt.savefig('comparison.png')
     plt.show()
+    
+    # plot the spherical distribution of the orientations
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    plt.title("gathered points")
+    ax.scatter3D(dataset[:, 3], dataset[:, 4], dataset[:, 5], alpha=.1, marker='.')
+    ax.set_xlabel('x (mm)')
+    ax.set_ylabel('y (mm)')
+    ax.set_zlabel('z (mm)')
+    #plt.savefig('comparison.png')
+    plt.show()
+    return
     
     np.random.shuffle(dataset)
     training = dataset[:int(.8*dataset.shape[0])]
@@ -249,6 +261,7 @@ def main(origin=np.array([-25., -25., 100.]), side_length=50., n_diag_points=50,
     for alpha in alphas:
         if dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['train nmae'] < dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['train nmae']:
             alpha_star = alpha
+    alpha_star = 1e-10
         
     # plot which points have an higher error
     
