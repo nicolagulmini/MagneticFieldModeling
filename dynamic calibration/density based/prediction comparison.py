@@ -9,8 +9,8 @@ import CoilModel as Coil
 import tensorflow as tf
 from tensorflow import keras
 
-folder = "2"
-filename = "sampled_points.csv"
+folder = "1"
+filename = "resampled_points.csv"
 path = "C:/Users/nicol/Desktop/data/" + folder + "/"
 
 matrix_for_real_data = np.array([[0.999910386486641, 0.0132637271291318, 0.00177556758556555, 4.60082741045687],
@@ -79,11 +79,9 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
             dataset[i][:3] = new_position
             dataset[i][3:6] = new_orientation
             
-    print(dataset[:3])
     # convert the data from mm to m
     for i in range(dataset.shape[0]):
-        dataset[i][:3] = dataset[i][:3] / 1000
-    print(dataset[:3])
+        dataset[i][:3] = dataset[i][:3]
     
     # if smaller_cube:
     #     effective_dimensions = origin/np.sqrt(2.) # it is the smaller cube of length L/sqrt(2), where L is the bigger cubes length
