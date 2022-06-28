@@ -57,6 +57,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     y_diag = np.linspace(origin[1], origin[1]+side_length, n_diag_points)[:, np.newaxis] / 1000
     z_diag = np.linspace(origin[2], origin[2]+side_length, n_diag_points)[:, np.newaxis] / 1000
     diag = np.concatenate((x_diag, y_diag, z_diag), axis=1)
+    print(diag)
     
     diag_for_x = np.concatenate((diag, np.array([[1., 0., 0.] for _ in range(n_diag_points)])), axis=1)
     diag_for_y = np.concatenate((diag, np.array([[0., 1., 0.] for _ in range(n_diag_points)])), axis=1)
@@ -79,10 +80,6 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
             dataset[i][:3] = new_position
             dataset[i][3:6] = new_orientation
             
-    # convert the data from mm to m
-    for i in range(dataset.shape[0]):
-        dataset[i][:3] = dataset[i][:3]
-    
     # if smaller_cube:
     #     effective_dimensions = origin/np.sqrt(2.) # it is the smaller cube of length L/sqrt(2), where L is the bigger cubes length
     #     effective_dataset = []
