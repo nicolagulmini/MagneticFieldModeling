@@ -9,14 +9,14 @@ import CoilModel as Coil
 import tensorflow as tf
 from tensorflow import keras
 
-folder = "6 real"
+folder = "2"
 filename = "sampled_points.csv"
 path = "C:/Users/nicol/Desktop/data/" + folder + "/"
 
 matrix_for_real_data = np.array([[0.999910386486641, 0.0132637271291318, 0.00177556758556555, 4.60082741045687],
-[-0.0132730439610558, 0.999897566016150, 0.00534218300150869	, 0.386762332074675],
-[-0.00170455528053870, -0.00536526920313416, 0.999984151502086, 28.3150462403445],
-[0,	 0, 0, 1]])
+                                 [-0.0132730439610558, 0.999897566016150, 0.00534218300150869	, 0.386762332074675],
+                                 [-0.00170455528053870, -0.00536526920313416, 0.999984151502086, 28.3150462403445],
+                                 [0, 0, 0, 1]])
 
 rotation_matrix = matrix_for_real_data[:3, :3]
 translation_vector = matrix_for_real_data.T[3][:3]
@@ -42,7 +42,7 @@ def get_metrics(pred, unc, x_train, y_train, x_val, y_val, n_diag_points, den_to
     return pred_train, pred_val, pred_x, pred_y, pred_z, unc_train, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point, mae_train, mae_per_point_train
     
 
-def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50, centers_x=[-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], centers_y=[93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000], smaller_cube=False, real=False):
+def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25, centers_x=[-93.543, 0., 93.543, -68.55, 68.55, -93.543, 0., 93.543], centers_y=[93.543, 68.55, 93.543, 0., 0., -93.543, -68.55, -93.543], smaller_cube=False, real=False):
     # put the origin of the cube, the side length and the number of points along the diagonal manually
     
     if not os.path.exists(path + filename):
@@ -53,11 +53,11 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     # it makes sense almost only if we sample with a simulated magnetic field. Otherwise just ignore the related section.
     coil_model = Coil.CoilModel(module_config={'centers_x': centers_x, 'centers_y': centers_y})
 
-    x_diag = np.linspace(origin[0], origin[0]+side_length, n_diag_points)[:, np.newaxis]
-    y_diag = np.linspace(origin[1], origin[1]+side_length, n_diag_points)[:, np.newaxis]
-    z_diag = np.linspace(origin[2], origin[2]+side_length, n_diag_points)[:, np.newaxis]
+    x_diag = np.linspace(origin[0], origin[0]+side_length, n_diag_points)[:, np.newaxis] / 1000
+    y_diag = np.linspace(origin[1], origin[1]+side_length, n_diag_points)[:, np.newaxis] / 1000
+    z_diag = np.linspace(origin[2], origin[2]+side_length, n_diag_points)[:, np.newaxis] / 1000
     diag = np.concatenate((x_diag, y_diag, z_diag), axis=1)
-
+    
     diag_for_x = np.concatenate((diag, np.array([[1., 0., 0.] for _ in range(n_diag_points)])), axis=1)
     diag_for_y = np.concatenate((diag, np.array([[0., 1., 0.] for _ in range(n_diag_points)])), axis=1)
     diag_for_z = np.concatenate((diag, np.array([[0., 0., 1.] for _ in range(n_diag_points)])), axis=1)
@@ -69,7 +69,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     dataset = np.loadtxt(path + filename) # shape should be (n, 14)
     # n is the number of points
     # each point is 14-dimensional: 3 positions, 3 orientations, 8 coils 
-
+    
     if real:
         for i in range(dataset.shape[0]):
             position = dataset[i][:3]
@@ -78,19 +78,25 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
             new_position = np.matmul(rotation_matrix, position) + translation_vector
             dataset[i][:3] = new_position
             dataset[i][3:6] = new_orientation
-        
-    if smaller_cube:
-        effective_dimensions = origin/np.sqrt(2.) # it is the smaller cube of length L/sqrt(2), where L is the bigger cubes length
-        effective_dataset = []
-        for point in dataset:
-            if point[0] > origin[0]+effective_dimensions[0]/2 and point[0] < origin[0]+side_length-effective_dimensions[0]/2:
-                if point[1] > origin[1]+effective_dimensions[1]/2 and point[1] < origin[1]+side_length-effective_dimensions[1]/2:
-                    if point[2] > origin[2]+effective_dimensions[2]/2 and point[2] < origin[2]+side_length-effective_dimensions[2]/2:
-                        effective_dataset.append(point)
-        effective_dataset = np.array(effective_dataset)
-        print("%i discarded points" % (dataset.shape[0]-effective_dataset.shape[0]))
-        print("now the dataset contains %i points" % effective_dataset.shape[0])
-        dataset = effective_dataset
+            
+    print(dataset[:3])
+    # convert the data from mm to m
+    for i in range(dataset.shape[0]):
+        dataset[i][:3] = dataset[i][:3] / 1000
+    print(dataset[:3])
+    
+    # if smaller_cube:
+    #     effective_dimensions = origin/np.sqrt(2.) # it is the smaller cube of length L/sqrt(2), where L is the bigger cubes length
+    #     effective_dataset = []
+    #     for point in dataset:
+    #         if point[0] > origin[0]+effective_dimensions[0]/2 and point[0] < origin[0]+side_length-effective_dimensions[0]/2:
+    #             if point[1] > origin[1]+effective_dimensions[1]/2 and point[1] < origin[1]+side_length-effective_dimensions[1]/2:
+    #                 if point[2] > origin[2]+effective_dimensions[2]/2 and point[2] < origin[2]+side_length-effective_dimensions[2]/2:
+    #                     effective_dataset.append(point)
+    #     effective_dataset = np.array(effective_dataset)
+    #     print("%i discarded points" % (dataset.shape[0]-effective_dataset.shape[0]))
+    #     print("now the dataset contains %i points" % effective_dataset.shape[0])
+    #     dataset = effective_dataset
     
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection='3d')
@@ -99,17 +105,17 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     ax.set_xlabel('x (mm)')
     ax.set_ylabel('y (mm)')
     ax.set_zlabel('z (mm)')
-    plt.savefig('sampled points.png')
+    plt.savefig(path + 'sampled points.png')
     
     # plot the spherical distribution of the orientations
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection='3d')
-    plt.title("gathered points")
+    plt.title("gathered points' orientations' distribution")
     ax.scatter3D(dataset[:, 3], dataset[:, 4], dataset[:, 5], alpha=.1, marker='.')
-    ax.set_xlabel('x (mm)')
-    ax.set_ylabel('y (mm)')
-    ax.set_zlabel('z (mm)')
-    plt.savefig('orientations distribution.png')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+    plt.savefig(path + 'orientations distribution.png')
 
     np.random.shuffle(dataset)
     training = dataset[:int(.8*dataset.shape[0])]
@@ -128,7 +134,6 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     
     # to get also the diagonal predictions
     to_predict = np.concatenate((x_train, x_val, diag_for_x, diag_for_y, diag_for_z), axis=0)
-    
     dictionary_with_performances = {}
     
     # to model the noise
@@ -172,7 +177,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
 
     history = model.fit(x_train, 
                         y_train, 
-                        validation_data=(x_val_nn, y_val_nn),
+                        validation_data=(x_val_nn, y_val_nn), 
                         epochs=100, 
                         batch_size=32, 
                         verbose=0,
@@ -255,17 +260,32 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     
     alpha_star = alphas[0] 
     for alpha in alphas:
-        if dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['train nmae'] < dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['train nmae']:
+        if alpha_star < dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['train nmae']:
             alpha_star = alpha
         
     # plot which points have an higher error
     
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection='3d')
-    plt.title("test points")
+    plt.title("error on test positions (train points in green)")
     colors = dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae per point']
     # print(colors)
     ax.scatter3D(x_val[:, 0], x_val[:, 1], x_val[:, 2], c=colors, marker='o', cmap='coolwarm') # change the cmap
+    ax.scatter3D(x_train[:, 0], x_train[:, 1], x_train[:, 2], c='green', marker='.', alpha=.2) # change the cmap
+    ax.set_xlabel('x (mm)')
+    ax.set_ylabel('y (mm)')
+    ax.set_zlabel('z (mm)')
+    plt.show()
+    
+    # plot which orientations have an higher error
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    plt.title("error on test orientations (train points in green)")
+    colors = dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae per point']
+    # print(colors)
+    ax.scatter3D(x_val[:, 3], x_val[:, 4], x_val[:, 5], c=colors, marker='o', cmap='coolwarm') # change the cmap
+    ax.scatter3D(x_train[:, 3], x_train[:, 4], x_train[:, 5], c='green', marker='.', alpha=.2) 
     ax.set_xlabel('x (mm)')
     ax.set_ylabel('y (mm)')
     ax.set_zlabel('z (mm)')
@@ -316,6 +336,20 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=50,
     plt.yscale('log')
     plt.grid(color='grey', linewidth=.5, alpha=.5)
     plt.savefig(path + "rbfi nrmse unc log")
+    
+    # figure out why some points have less uncertainty than others
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    plt.title("uncertainty on test points (train points in green)")
+    colors = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['uncertainty']
+    colors /= max(colors)
+    ax.scatter3D(x_val[:, 0], x_val[:, 1], x_val[:, 2], c=colors, marker='o', cmap='coolwarm') # change the cmap
+    ax.scatter3D(x_train[:, 0], x_train[:, 1], x_train[:, 2], c='green', marker='.', alpha=.2) # change the cmap
+    ax.set_xlabel('x (mm)')
+    ax.set_ylabel('y (mm)')
+    ax.set_zlabel('z (mm)')
+    plt.show()
 
     # test on a diagonal
     
