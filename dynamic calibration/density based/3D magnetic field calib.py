@@ -49,9 +49,9 @@ print("Press the STOP button (or CTRL+C) when satisfied about the amount of gath
 
 global q, cube, coil_model, client
 q = Queue(maxsize = AMOUNT_OF_NEW_POINTS)
-cube = CubeModel.cube_to_calib(np.array([-25., -25., 100.]), side_length=50., point_density=10., minimum_number_of_points=1)
-coil_model = Coil.CoilModel(module_config={'centers_x': [-93.543*1000, 0., 93.543*1000, -68.55*1000, 68.55*1000, -93.543*1000, 0., 93.543*1000], 
-                                      'centers_y': [93.543*1000, 68.55*1000, 93.543*1000, 0., 0., -93.543*1000, -68.55*1000, -93.543*1000]}) # mm
+cube = CubeModel.cube_to_calib(np.array([-.025, -.025, .1]), side_length=.05, point_density=10., minimum_number_of_points=1)
+coil_model = Coil.CoilModel(module_config={'centers_x': [-93.543, 0., 93.543, -68.55, 68.55, -93.543, 0., 93.543], 
+                                      'centers_y': [93.543, 68.55, 93.543, 0., 0., -93.543, -68.55, -93.543]}) # mm
 
 def get_theoretical_field(model, point, ori=None):
     tmp = np.concatenate(model.coil_field_total(point[0], point[1], point[2]), axis=1).T

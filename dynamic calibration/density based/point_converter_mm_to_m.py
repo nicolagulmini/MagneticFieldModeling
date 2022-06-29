@@ -32,4 +32,4 @@ new_data = np.concatenate((points[:,:6], predicted_fields), axis=1)
 # print(new_data.shape)
 # print(data[0], new_data[0])
 
-np.savetxt("C:/Users/nicol/Desktop/data/1/resampled_points.csv", new_data)
+np.savetxt("C:/Users/nicol/Desktop/data/2/resampled_points.csv", new_data)

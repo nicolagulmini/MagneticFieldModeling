@@ -9,7 +9,7 @@ import CoilModel as Coil
 import tensorflow as tf
 from tensorflow import keras
 
-folder = "1"
+folder = "2"
 filename = "resampled_points.csv"
 path = "C:/Users/nicol/Desktop/data/" + folder + "/"
 
