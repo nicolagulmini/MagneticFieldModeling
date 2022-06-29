@@ -42,7 +42,7 @@ def get_metrics(pred, unc, x_train, y_train, x_val, y_val, n_diag_points, den_to
     return pred_train, pred_val, pred_x, pred_y, pred_z, unc_train, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point, mae_train, mae_per_point_train
     
 
-def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25, centers_x=[-93.543, 0., 93.543, -68.55, 68.55, -93.543, 0., 93.543], centers_y=[93.543, 68.55, 93.543, 0., 0., -93.543, -68.55, -93.543], smaller_cube=False, real=False):
+def main(origin=np.array([-.050, -.050, .050]), side_length=.1, n_diag_points=25, centers_x=[-93.543, 0., 93.543, -68.55, 68.55, -93.543, 0., 93.543], centers_y=[93.543, 68.55, 93.543, 0., 0., -93.543, -68.55, -93.543], smaller_cube=False, real=False):
     # put the origin of the cube, the side length and the number of points along the diagonal manually
     
     if not os.path.exists(path + filename):
@@ -53,19 +53,19 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     # it makes sense almost only if we sample with a simulated magnetic field. Otherwise just ignore the related section.
     coil_model = Coil.CoilModel(module_config={'centers_x': centers_x, 'centers_y': centers_y})
 
-    x_diag = np.linspace(origin[0], origin[0]+side_length, n_diag_points)[:, np.newaxis] / 1000
-    y_diag = np.linspace(origin[1], origin[1]+side_length, n_diag_points)[:, np.newaxis] / 1000
-    z_diag = np.linspace(origin[2], origin[2]+side_length, n_diag_points)[:, np.newaxis] / 1000
+    x_diag = np.linspace(0, 1, n_diag_points)[:, np.newaxis]
+    y_diag = np.linspace(0, 1, n_diag_points)[:, np.newaxis]
+    z_diag = np.linspace(0, 1, n_diag_points)[:, np.newaxis]
     diag = np.concatenate((x_diag, y_diag, z_diag), axis=1)
-    print(diag)
+    # print(diag)
     
     diag_for_x = np.concatenate((diag, np.array([[1., 0., 0.] for _ in range(n_diag_points)])), axis=1)
     diag_for_y = np.concatenate((diag, np.array([[0., 1., 0.] for _ in range(n_diag_points)])), axis=1)
     diag_for_z = np.concatenate((diag, np.array([[0., 0., 1.] for _ in range(n_diag_points)])), axis=1)
 
-    simulated_x = np.array([get_theoretical_field(coil_model, diag_for_x[i][:3], diag_for_x[i][3:]).A1 for i in range(n_diag_points)])
-    simulated_y = np.array([get_theoretical_field(coil_model, diag_for_y[i][:3], diag_for_y[i][3:]).A1 for i in range(n_diag_points)])
-    simulated_z = np.array([get_theoretical_field(coil_model, diag_for_z[i][:3], diag_for_z[i][3:]).A1 for i in range(n_diag_points)])
+    simulated_x = np.array([get_theoretical_field(coil_model, diag_for_x[i][:3]*side_length+origin, diag_for_x[i][3:]).A1 for i in range(n_diag_points)])
+    simulated_y = np.array([get_theoretical_field(coil_model, diag_for_y[i][:3]*side_length+origin, diag_for_y[i][3:]).A1 for i in range(n_diag_points)])
+    simulated_z = np.array([get_theoretical_field(coil_model, diag_for_z[i][:3]*side_length+origin, diag_for_z[i][3:]).A1 for i in range(n_diag_points)])
         
     dataset = np.loadtxt(path + filename) # shape should be (n, 14)
     # n is the number of points
@@ -93,13 +93,16 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     #     print("now the dataset contains %i points" % effective_dataset.shape[0])
     #     dataset = effective_dataset
     
+    # normalize positions between 0 and 1
+    dataset[:, :3] = (dataset[:, :3]-origin)/side_length
+    
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection='3d')
-    plt.title("gathered points")
+    plt.title("(normalized) gathered points")
     ax.scatter3D(dataset[:, 0], dataset[:, 1], dataset[:, 2], alpha=.1, marker='.')
-    ax.set_xlabel('x (mm)')
-    ax.set_ylabel('y (mm)')
-    ax.set_zlabel('z (mm)')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
     plt.savefig(path + 'sampled points.png')
     
     # plot the spherical distribution of the orientations
@@ -133,28 +136,30 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     
     # to model the noise
     alphas = [1e-10, 1e-9, 1e-8, 1e-7, 5e-7, 1e-6, 5e-6, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 1e-2, 1e-1, 1., 10., 100.]
+    gammas = [1e-2, 5e-2, 1e-1, 5e-1, 1., 5., 10., 50., 100.]
     for alpha in alphas:
+        for gamma in gammas:
         
         # radial basis function interpolation 
         
-        crbf = crbfi.custom_radial_basis_function_interpolator(gamma=.0005, sigma=alpha, points=x_train, measures=y_train, stack_grid=to_predict) 
-        pred = crbf.predict()
-        unc = crbf.uncertainty()
-        pred_train, pred_val, pred_x, pred_y, pred_z, unc_train, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point, mae_train, mae_per_point_train = get_metrics(pred, unc, x_train, y_train, x_val, y_val, n_diag_points, den_to_normalize_val, den_to_normalize_train)
-        dictionary_with_performances["custom radial basis function interpolator " + str(alpha)] = {"alpha": alpha, 
-                                                            "nmae": mae,
-                                                            "nrmse": rmse,
-                                                            "uncertainty": unc_val,
-                                                            "nmae per point": mae_per_point,
-                                                            "nrmse per point": rmse_per_point,
-                                                            "diag x preds": pred_x,
-                                                            "diag y preds": pred_y,
-                                                            "diag z preds": pred_z,
-                                                            "unc diag x": unc_x,
-                                                            "unc diag y": unc_y,
-                                                            "unc diag z": unc_z,
-                                                            "train nmae": mae_train
-                                                            }
+            crbf = crbfi.custom_radial_basis_function_interpolator(gamma=gamma, sigma=alpha, points=x_train, measures=y_train, stack_grid=to_predict) 
+            pred = crbf.predict()
+            unc = crbf.uncertainty()
+            pred_train, pred_val, pred_x, pred_y, pred_z, unc_train, unc_val, unc_x, unc_y, unc_z, mae, mae_per_point, rmse, rmse_per_point, mae_train, mae_per_point_train = get_metrics(pred, unc, x_train, y_train, x_val, y_val, n_diag_points, den_to_normalize_val, den_to_normalize_train)
+            dictionary_with_performances["custom radial basis function interpolator " + str(alpha) + " " + str(gamma)] = {"alpha": alpha, 
+                                                                "nmae": mae,
+                                                                "nrmse": rmse,
+                                                                "uncertainty": unc_val,
+                                                                "nmae per point": mae_per_point,
+                                                                "nrmse per point": rmse_per_point,
+                                                                "diag x preds": pred_x,
+                                                                "diag y preds": pred_y,
+                                                                "diag z preds": pred_z,
+                                                                "unc diag x": unc_x,
+                                                                "unc diag y": unc_y,
+                                                                "unc diag z": unc_z,
+                                                                "train nmae": mae_train
+                                                                }
             
     # neural network 
     input = tf.keras.layers.Input((6))
@@ -163,7 +168,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     output = tf.keras.layers.Dense(8, activation='linear')(x)
 
     model = tf.keras.models.Model(inputs=input, outputs=output)
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001), 
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), 
                   loss=tf.keras.losses.MeanAbsoluteError(), 
                   metrics=[tf.keras.losses.MeanAbsoluteError(), tf.keras.losses.MeanSquaredError()])
     #model.summary()
@@ -209,15 +214,15 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     plt.figure()
     plt.title(r'error on test set vs $\alpha$ Radial Basis Function Interpolation')
     
-    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae'] for alpha in alphas]
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha) + " " + str(.05)]['nmae'] for alpha in alphas]
     plt.scatter(alphas, y, marker='^', label='nMAE')
     plt.plot(alphas, y, ls='--')
     
-    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nrmse'] for alpha in alphas]
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha) + " " + str(.05)]['nrmse'] for alpha in alphas]
     plt.scatter(alphas, y, marker='o', label='nRMSE')
     plt.plot(alphas, y, ls='--')
     
-    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['train nmae'] for alpha in alphas]
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha) + " " + str(.05)]['train nmae'] for alpha in alphas]
     plt.scatter(alphas, y, marker='.', label='train nMAE')
     plt.plot(alphas, y, ls='--')
     
@@ -232,15 +237,15 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     plt.figure()
     plt.title(r'error on test set vs $\alpha$ Radial Basis Function Interpolation')
     
-    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae'] for alpha in alphas]
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha) + " " + str(.05)]['nmae'] for alpha in alphas]
     plt.scatter(alphas, y, marker='^', label='nMAE')
     plt.plot(alphas, y, ls='--')
     
-    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nrmse'] for alpha in alphas]
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha) + " " + str(.05)]['nrmse'] for alpha in alphas]
     plt.scatter(alphas, y, marker='o', label='nRMSE')
     plt.plot(alphas, y, ls='--')
     
-    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['train nmae'] for alpha in alphas]
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(alpha) + " " + str(.05)]['train nmae'] for alpha in alphas]
     plt.scatter(alphas, y, marker='.', label='train nMAE')
     plt.plot(alphas, y, ls='--')
     
@@ -250,26 +255,79 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     plt.legend(loc='upper right')
     plt.xscale('log')
     plt.savefig(path + "crbfi log alpha error")
+        
+    # crbfi error vs gamma
+        
+    plt.figure()
+    plt.title(r'error on test set vs $\gamma$ Radial Basis Function Interpolation')
+    
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(1e-10) + " " + str(gamma)]['nmae'] for gamma in gammas]
+    plt.scatter(gammas, y, marker='^', label='nMAE')
+    plt.plot(gammas, y, ls='--')
+    
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(1e-10) + " " + str(gamma)]['nrmse'] for gamma in gammas]
+    plt.scatter(gammas, y, marker='o', label='nRMSE')
+    plt.plot(gammas, y, ls='--')
+    
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(1e-10) + " " + str(gamma)]['train nmae'] for gamma in gammas]
+    plt.scatter(gammas, y, marker='.', label='train nMAE')
+    plt.plot(gammas, y, ls='--')
+    
+    plt.grid(color='grey', linewidth=.5, alpha=.5)
+    plt.xlabel(r'$\gamma$')
+    plt.ylabel('error')
+    plt.legend(loc='upper right')
+    plt.savefig(path + "crbfi gamma error")
+    
+    # crbfi vs gamma (logarithmic scale)
+    
+    plt.figure()
+    plt.title(r'error on test set vs $\gamma$ Radial Basis Function Interpolation')
+    
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(1e-10) + " " + str(gamma)]['nmae'] for gamma in gammas]
+    plt.scatter(gammas, y, marker='^', label='nMAE')
+    plt.plot(gammas, y, ls='--')
+    
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(1e-10) + " " + str(gamma)]['nrmse'] for gamma in gammas]
+    plt.scatter(gammas, y, marker='o', label='nRMSE')
+    plt.plot(gammas, y, ls='--')
+    
+    y = [dictionary_with_performances["custom radial basis function interpolator " + str(1e-10) + " " + str(gamma)]['train nmae'] for gamma in gammas]
+    plt.scatter(gammas, y, marker='.', label='train nMAE')
+    plt.plot(gammas, y, ls='--')
+    
+    plt.grid(color='grey', linewidth=.5, alpha=.5)
+    plt.xlabel(r'$\gamma$')
+    plt.ylabel('error')
+    plt.legend(loc='upper right')
+    plt.xscale('log')
+    plt.savefig(path + "crbfi log gamma error")
     
     # pick the best alpha, in terms of nMAE (need to define what does it mean 'best alpha')
     
     alpha_star = alphas[0] 
+    gamma_star = gammas[0]
     for alpha in alphas:
-        if alpha_star < dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['train nmae']:
-            alpha_star = alpha
+        for gamma in gammas:
+            if dictionary_with_performances["custom radial basis function interpolator " + str(alpha) + " " + str(gamma)]['nmae'] < dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['nmae']:
+                alpha_star = alpha
+                gamma_star = gamma
+    # alpha_star = 1e-10
+    # gamma_star = .05
+    print(gamma_star, alpha_star)
         
     # plot which points have an higher error
     
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection='3d')
     plt.title("error on test positions (train points in green)")
-    colors = dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae per point']
+    colors = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['nmae per point']
     # print(colors)
     ax.scatter3D(x_val[:, 0], x_val[:, 1], x_val[:, 2], c=colors, marker='o', cmap='coolwarm') # change the cmap
     ax.scatter3D(x_train[:, 0], x_train[:, 1], x_train[:, 2], c='green', marker='.', alpha=.2) # change the cmap
-    ax.set_xlabel('x (mm)')
-    ax.set_ylabel('y (mm)')
-    ax.set_zlabel('z (mm)')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
     plt.show()
     
     # plot which orientations have an higher error
@@ -277,21 +335,21 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection='3d')
     plt.title("error on test orientations (train points in green)")
-    colors = dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae per point']
+    colors = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['nmae per point']
     # print(colors)
     ax.scatter3D(x_val[:, 3], x_val[:, 4], x_val[:, 5], c=colors, marker='o', cmap='coolwarm') # change the cmap
     ax.scatter3D(x_train[:, 3], x_train[:, 4], x_train[:, 5], c='green', marker='.', alpha=.2) 
-    ax.set_xlabel('x (mm)')
-    ax.set_ylabel('y (mm)')
-    ax.set_zlabel('z (mm)')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
     plt.show()
     
     # correlation error and uncertainty crbfi
     
     plt.figure()
-    plt.title("RBFI nMAE and uncertainty. nMAE = " + str(round(dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae'], 4)) + " %")
-    x = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['uncertainty']
-    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['nmae per point']
+    plt.title("RBFI nMAE and uncertainty. nMAE = " + str(round(dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['nmae'], 4)) + " %")
+    x = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['uncertainty']
+    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['nmae per point']
     plt.scatter(x, y, marker='.', alpha=.5, color='black')
     plt.xlabel('uncertainty')
     plt.ylabel('nMAE')
@@ -299,9 +357,9 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     plt.savefig(path + "rbfi nmae unc")
     
     plt.figure()
-    plt.title("RBFI nRMSE and uncertainty. nRMSE = " + str(round(dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nrmse'], 4)) + " %")
-    x = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['uncertainty']
-    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['nrmse per point']
+    plt.title("RBFI nRMSE and uncertainty. nRMSE = " + str(round(dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['nrmse'], 4)) + " %")
+    x = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['uncertainty']
+    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['nrmse per point']
     plt.scatter(x, y, marker='.', alpha=.5, color='black')
     plt.xlabel('uncertainty')
     plt.ylabel('nRMSE')
@@ -309,9 +367,9 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     plt.savefig(path + "rbfi nrmse unc")
     
     plt.figure()
-    plt.title("RBFI nMAE and uncertainty. nMAE = " + str(round(dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nmae'], 4)) + " %")
-    x = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['uncertainty']
-    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['nmae per point']
+    plt.title("RBFI nMAE and uncertainty. nMAE = " + str(round(dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['nmae'], 4)) + " %")
+    x = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['uncertainty']
+    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['nmae per point']
     plt.scatter(x, y, marker='.', alpha=.5, color='black')
     plt.xlabel('uncertainty')
     plt.ylabel('nMAE')
@@ -321,9 +379,9 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     plt.savefig(path + "rbfi nmae unc log")
     
     plt.figure()
-    plt.title("RBFI nRMSE and uncertainty. nRMSE = " + str(round(dictionary_with_performances["custom radial basis function interpolator " + str(alpha)]['nrmse'], 4)) + " %")
-    x = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['uncertainty']
-    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['nrmse per point']
+    plt.title("RBFI nRMSE and uncertainty. nRMSE = " + str(round(dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['nrmse'], 4)) + " %")
+    x = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['uncertainty']
+    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['nrmse per point']
     plt.scatter(x, y, marker='.', alpha=.5, color='black')
     plt.xlabel('uncertainty')
     plt.ylabel('nRMSE')
@@ -337,13 +395,13 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection='3d')
     plt.title("uncertainty on test points (train points in green)")
-    colors = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['uncertainty']
+    colors = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['uncertainty']
     colors /= max(colors)
     ax.scatter3D(x_val[:, 0], x_val[:, 1], x_val[:, 2], c=colors, marker='o', cmap='coolwarm') # change the cmap
     ax.scatter3D(x_train[:, 0], x_train[:, 1], x_train[:, 2], c='green', marker='.', alpha=.2) # change the cmap
-    ax.set_xlabel('x (mm)')
-    ax.set_ylabel('y (mm)')
-    ax.set_zlabel('z (mm)')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
     plt.show()
 
     # test on a diagonal
@@ -351,7 +409,7 @@ def main(origin=np.array([-50., -50., 50.]), side_length=100., n_diag_points=25,
     plt.figure()
     plt.title("Magnetic field prediction and comparison of RBFI - x component, first coil\n(only for simulated magnetic data)")
     
-    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star)]['diag x preds']
+    y = dictionary_with_performances["custom radial basis function interpolator " + str(alpha_star) + " " + str(gamma_star)]['diag x preds']
     k_x = 1.
     
     if real: 

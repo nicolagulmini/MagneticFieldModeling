@@ -43,7 +43,7 @@ den_to_norm = np.max(abs(measured_magnetic_field))
 
 k = 1.
 
-n_coil = 3
+n_coil = 1
 
 # k = sum(measured_magnetic_field[:,n_coil]*predicted_fields[:,n_coil]) / sum(measured_magnetic_field[:, n_coil]**2) 
 # k += 0.01e-8
@@ -55,9 +55,9 @@ plt.title("test points")
 colors = [((k*measured_magnetic_field[i]-predicted_fields[i])/predicted_fields[i])[n_coil] for i in range(points.shape[0])]
 # print(colors)
 p = ax.scatter3D(points[:, 0], points[:, 1], points[:, 2], c=colors, marker='o', cmap='coolwarm') # change the cmap
-ax.set_xlabel('x (mm)')
-ax.set_ylabel('y (mm)')
-ax.set_zlabel('z (mm)')
+ax.set_xlabel('x (m)')
+ax.set_ylabel('y (m)')
+ax.set_zlabel('z (m)')
 fig.colorbar(p, ax=ax)
 plt.show()
 

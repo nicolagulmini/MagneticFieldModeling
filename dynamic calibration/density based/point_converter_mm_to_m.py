@@ -23,11 +23,13 @@ print(data[0])
 #     data[i][3:6] = new_orientation
 
 points = data[:, :6]
+print(points[0])
 points[:, :3] /= 1000
+print(points[0])
 predicted_fields = np.array([get_theoretical_field(coil_model, point[:3], ori=point[3:6]).A1 for point in points])
-print(predicted_fields.shape)
+# print(predicted_fields.shape)
 new_data = np.concatenate((points[:,:6], predicted_fields), axis=1)
-print(new_data.shape)
-print(data[0], new_data[0])
+# print(new_data.shape)
+# print(data[0], new_data[0])
 
 np.savetxt("C:/Users/nicol/Desktop/data/1/resampled_points.csv", new_data)
