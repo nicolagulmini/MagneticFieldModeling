@@ -12,7 +12,7 @@ def get_theoretical_field(model, point, ori=None):
     if ori is None: return tmp # (3, 8)
     return np.dot(ori, tmp)
 
-data = np.loadtxt("C:/Users/nicol/Desktop/data/1/sampled_points.csv")
+data = np.loadtxt("C:/Users/nicol/Desktop/data/2/sampled_points.csv")
 print(data[0])
 # for i in range(data.shape[0]):
 #     position = data[i][:3]
