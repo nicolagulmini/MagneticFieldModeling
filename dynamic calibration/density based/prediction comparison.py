@@ -9,7 +9,7 @@ import CoilModel as Coil
 import tensorflow as tf
 from tensorflow import keras
 
-folder = "2"
+folder = "1"
 filename = "resampled_points.csv"
 path = "C:/Users/nicol/Desktop/data/" + folder + "/"
 
@@ -328,7 +328,7 @@ def main(origin=np.array([-.050, -.050, .050]), side_length=.1, n_diag_points=25
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
-    plt.show()
+    plt.savefig(path + "green pos")
     
     # plot which orientations have an higher error
     
@@ -342,7 +342,7 @@ def main(origin=np.array([-.050, -.050, .050]), side_length=.1, n_diag_points=25
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
-    plt.show()
+    plt.savefig(path + "green ori")
     
     # correlation error and uncertainty crbfi
     
@@ -402,7 +402,7 @@ def main(origin=np.array([-.050, -.050, .050]), side_length=.1, n_diag_points=25
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
-    plt.show()
+    plt.savefig(path + "some points has less unc than others")
 
     # test on a diagonal
     
